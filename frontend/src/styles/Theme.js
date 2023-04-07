@@ -1,4 +1,4 @@
-export default theme = {
+export const Theme = {
     /* Layout */
     mobile: "375px",
     desktop: "1440px",
