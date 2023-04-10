@@ -11,6 +11,7 @@ export const GlobalStyles = createGlobalStyle`
     html, body, #root {
         width: 100%;
         height: 100%;
+        background-color: ${props => props.theme.veryLightGray};
     }
 
     a {
@@ -30,10 +31,10 @@ export const GlobalStyles = createGlobalStyle`
         background-color: transparent;
     }
 
-
     input, textarea {
         border: none;
     }
+
     input:focus, textarea:focus {
             outline: none;
     }
