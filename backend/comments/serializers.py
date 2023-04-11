@@ -1,6 +1,6 @@
 from .models import Comment
 from authentification.serializers import UserSerializer
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, PrimaryKeyRelatedField
 
 
 class CommentSerializer(ModelSerializer):
@@ -8,4 +8,9 @@ class CommentSerializer(ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ("content", "score", "user", "replies", "timesince")
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["replies"] = CommentSerializer(instance.replies.all(), many=True).data
+        return rep

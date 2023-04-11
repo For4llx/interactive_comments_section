@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-const Container = styled.div`
+const WrapperModal = styled.div`
     position: absolute;
     display: flex;
     align-items: center;
@@ -21,14 +21,14 @@ const Modal = styled.div`
     max-width: 400px;
 `
 
-const Heading = styled.h1`
+const HeadingModal = styled.h1`
     font-family: 'Rubik', sans-serif;
     font-weight: bold;
     font-size: 24px;
     color: ${props => props.theme.darkBlue};
 `
 
-const Paragraph = styled.p`
+const ParagraphModal = styled.p`
     font-family: 'Rubik', sans-serif;
     font-weight: 400;
     font-size: ${props => props.theme.fontSizeParagraph};
@@ -36,7 +36,7 @@ const Paragraph = styled.p`
     line-height: 24px;
 `
 
-const ButtonList = styled.ul`
+const ButtonListModal = styled.ul`
     display: flex;
     justify-content: space-between;
 `
@@ -45,19 +45,19 @@ const ButtonList = styled.ul`
 
 function CommentModal(props) {
     return (
-        <Container>
+        <WrapperModal>
             <Modal>
-                <Heading>Delete comment</Heading>
-                <Paragraph>
+                <HeadingModal>Delete comment</HeadingModal>
+                <ParagraphModal>
                     Are you sure you want to delete this comment?
                     This will remove the comment and can’t be undone.
-                </Paragraph>
-                <ButtonList>
+                </ParagraphModal>
+                <ButtonListModal>
                     <li>{props.buttonCancel}</li>
                     <li>{props.buttonDelete}</li>
-                </ButtonList>
+                </ButtonListModal>
             </Modal>
-        </Container>
+        </WrapperModal>
     )
 }
 
