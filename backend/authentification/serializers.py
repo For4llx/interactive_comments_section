@@ -13,4 +13,4 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "image")
+        fields = ("id", "image", "username")

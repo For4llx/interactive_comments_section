@@ -17,9 +17,13 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from comments.views import CommentViewset
+from authentification.views import UserViewset
+
 
 router = routers.DefaultRouter()
 router.register(r"comments", CommentViewset)
+router.register(r"users", UserViewset)
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
