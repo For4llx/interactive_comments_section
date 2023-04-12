@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-const Container = styled.article`
+const CommentAddWrapper = styled.article`
     padding: 1.5rem;
     display: flex;
     align-items: top;
@@ -10,12 +10,12 @@ const Container = styled.article`
     width: 100%;
 `
 
-const Image = styled.img`
+const CommentAddImage = styled.img`
     width: 40px;
     height: 40px;
 `
 
-const Textarea = styled.textarea`
+const CommentAddTextarea = styled.textarea`
     padding: 1rem;
     display: flex;
     align-items: top;
@@ -41,13 +41,13 @@ const Item = styled.li`
 
 function CommentAdd(props) {
     return (
-        <Item>
-            <Container>
-                <Image src={props.picture} alt={props.username} />
-                <Textarea></Textarea>
+        <CommentAddItem>
+            <CommentAddWrapper>
+                <CommentAddImage src={props.picture} alt={props.username} />
+                <CommentAddTextarea></CommentAddTextarea>
                 {props.button}
-            </Container>
-        </Item>
+            </CommentAddWrapper>
+        </CommentAddItem>
     )
 }
 

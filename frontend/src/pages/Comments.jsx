@@ -203,6 +203,45 @@ const Textarea = styled.textarea`
     }
 `
 
+const CommentAddWrapper = styled.article`
+    padding: 1.5rem;
+    display: flex;
+    align-items: top;
+    gap: 1.5rem;
+    background-color: ${props => props.theme.white};
+    border-radius: 8px;
+    width: 100%;
+`
+
+const CommentAddImage = styled.img`
+    width: 40px;
+    height: 40px;
+`
+
+const CommentAddTextarea = styled.textarea`
+    padding: 1rem;
+    display: flex;
+    align-items: top;
+    gap: 1rem;
+    max-width: 730px;
+    background-color: ${props => props.theme.white};
+    border-radius: 8px;
+    border: 1px solid ${props => props.theme.lightGray};
+    resize: none;
+    width: 100%;
+    height: 96px;
+    line-height: 24px;
+    color: ${props => props.theme.darkBlue};
+    &:focus {
+        border: 1px solid ${props => props.theme.moderateBlue};
+    }
+`
+
+const CommentAddItem = styled.li`
+    width: 100%;
+    padding-top: 0.5rem;
+`
+
 const CounterWrapper = styled.div`
     display: flex;
     flex-direction: column;
@@ -355,6 +394,36 @@ function Comments() {
             return comment;
         });
         setComments(updatedItems);
+    }
+
+
+
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const content = e.target[0].value
+        const user = JSON.stringify(currentUser)
+        fetch('http://127.0.0.1:8000/comments/', {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "user": user,
+                "content": content,
+                "score": 0,
+                "reply": false,
+            })
+
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
 
 
@@ -633,14 +702,17 @@ function Comments() {
                             }
                         </CommenItem>
                     </>
-
             ))
             }
-            <CommentAdd
-                picture={currentUser.image.webp}
-                username={currentUser.username}
-                button={<AppButton>Send</AppButton>}
-            />
+            <form onSubmit={handleSubmit} method="POST">
+                <CommentAddItem>
+                    <CommentAddWrapper>
+                        <CommentAddImage src={currentUser.image.webp} alt={currentUser.username} />
+                        <CommentAddTextarea></CommentAddTextarea>
+                        <AppButton>Send</AppButton>
+                    </CommentAddWrapper>
+                </CommentAddItem>
+            </form>
         </CommentsContainer>
     )
 }
