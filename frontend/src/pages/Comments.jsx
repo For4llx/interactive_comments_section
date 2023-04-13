@@ -357,9 +357,16 @@ function Comments() {
         setComments(updatedItems);
     }
 
-    const handleEditClick = (itemId) => {
+    const handleEditClick = (itemId, content) => {
         const updatedItems = comments.map(comment => {
             if (comment.id === itemId) {
+                if (content) {
+                    return {
+                        ...comment,
+                        content: content,
+                        isEditing: !comment.isEditing
+                    };
+                }
                 return {
                     ...comment,
                     isEditing: !comment.isEditing
@@ -396,25 +403,21 @@ function Comments() {
         setComments(updatedItems);
     }
 
-
-
-
     const handleSubmit = (e) => {
         e.preventDefault();
         const content = e.target[0].value
-        const user = JSON.stringify(currentUser)
+        const body = JSON.stringify({
+            "user": currentUser,
+            "content": content,
+        })
+        console.log(body)
         fetch('http://127.0.0.1:8000/comments/', {
             method: 'POST',
             headers: {
                 "Accept": "application/json",
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "user": user,
-                "content": content,
-                "score": 0,
-                "reply": false,
-            })
+            body: body
 
         })
             .then(response => response.json())
@@ -426,6 +429,33 @@ function Comments() {
             });
     }
 
+    const handleCommentUpdate = (e) => {
+        e.preventDefault();
+        const content = e.target[0].value
+        const id = e.target[1].id
+        const body = JSON.stringify({
+            "id": id,
+            "content": content,
+        })
+        console.log(body)
+        fetch(`http://127.0.0.1:8000/comments/${id}/`, {
+            method: 'PUT',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: body
+
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                handleEditClick(parseInt(e.target[1].id), content)
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
 
     return (
         <CommentsContainer>
@@ -506,13 +536,13 @@ function Comments() {
                                         </ButtonList>
                                     </Header>
                                     {comment.isEditing ?
-                                        <>
+                                        <form onSubmit={handleCommentUpdate} method='PUT'>
                                             <Textarea
                                                 defaultValue={comment.content}
                                             >
                                             </Textarea>
                                             <AppButton id={comment.id}>Update</AppButton>
-                                        </>
+                                        </form>
                                         :
                                         <Paragraph>
                                             {comment.content}
@@ -642,13 +672,13 @@ function Comments() {
                                         </ButtonList>
                                     </Header>
                                     {comment.isEditing ?
-                                        <>
+                                        <form onSubmit={handleCommentUpdate} method="PUT">
                                             <Textarea
                                                 defaultValue={comment.content}
                                             >
                                             </Textarea>
                                             <AppButton id={comment.id}>Update</AppButton>
-                                        </>
+                                        </form>
                                         :
                                         <Paragraph>
                                             {comment.content}

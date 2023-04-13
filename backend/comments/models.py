@@ -8,7 +8,7 @@ class Comment(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    reply = models.BooleanField(blank=True, null=True)
+    reply = models.BooleanField(blank=True, null=True, default=False)
     replies = models.ManyToManyField("self", symmetrical=False, default=[])
 
     def __str__(self):
