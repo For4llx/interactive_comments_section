@@ -15,7 +15,7 @@ const WrapperModal = styled.div`
     background-color: hsl(0, 0%, 0%, 50%);
 `
 
-const Modal = styled.div`
+const Modal = styled.form`
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -406,11 +406,21 @@ function Comments() {
     const handleSubmit = (e) => {
         e.preventDefault();
         const content = e.target[0].value
-        const body = JSON.stringify({
-            "user": currentUser,
-            "content": content,
-        })
-        console.log(body)
+        let body = ""
+        if (e.target[1].dataset.reply) {
+            body = JSON.stringify({
+                "user": currentUser,
+                "content": content,
+                "reply": true,
+                "repliedTo": 1
+            })
+        } else {
+            body = JSON.stringify({
+                "user": currentUser,
+                "content": content,
+            })
+        }
+
         fetch('http://127.0.0.1:8000/comments/', {
             method: 'POST',
             headers: {
@@ -427,6 +437,34 @@ function Comments() {
             .catch((error) => {
                 console.error('Error:', error);
             });
+    }
+
+    const handleReply = (e) => {
+        e.preventDefault();
+        handleSubmit(e)
+        /*
+                const id = e.target[1].id
+                const content = e.target[0].value
+                const body = JSON.stringify({
+                    "user": currentUser,
+                    "content": content,
+                    "reply": true,
+                })
+                fetch(`http://127.0.0.1:8000/comments/${id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: body
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });*/
     }
 
     const handleCommentUpdate = (e) => {
@@ -457,15 +495,35 @@ function Comments() {
             });
     }
 
+    const handleCommentDelete = (e) => {
+        e.preventDefault();
+        const id = e.target[0].id
+        setComments((current) => current.filter(comment => comment.id != id))
+        fetch(`http://127.0.0.1:8000/comments/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
     return (
         <CommentsContainer>
             {comments.map(comment => (
-                comment.reply ?
+                !comment.reply ?
                     <>
                         {
                             comment.isDeleting ?
                                 <WrapperModal>
-                                    <Modal>
+                                    <Modal onSubmit={handleCommentDelete} method='delete'>
                                         <HeadingModal>Delete comment</HeadingModal>
                                         <ParagraphModal>
                                             Are you sure you want to delete this comment?
@@ -473,144 +531,7 @@ function Comments() {
                                         </ParagraphModal>
                                         <ButtonListModal>
                                             <li><AppButton id={comment.id} onClick={() => handleDeleteClick(comment.id)}>No, cancel</AppButton></li>
-                                            <li><AppButton>Yes, delete</AppButton></li>
-                                        </ButtonListModal>
-                                    </Modal>
-                                </WrapperModal>
-                                :
-                                null
-                        }
-                        <ReplyItem>
-                            <CommentWrapper>
-                                <CounterWrapper>
-                                    <CounterButton id={comment.id} onClick={() => handleCounterIncrementClick(comment.id)}>
-                                        <svg width="11" height="11" xmlns="http://www.w3.org/2000/svg"><path d="M6.33 10.896c.137 0 .255-.05.354-.149.1-.1.149-.217.149-.354V7.004h3.315c.136 0 .254-.05.354-.149.099-.1.148-.217.148-.354V5.272a.483.483 0 0 0-.148-.354.483.483 0 0 0-.354-.149H6.833V1.4a.483.483 0 0 0-.149-.354.483.483 0 0 0-.354-.149H4.915a.483.483 0 0 0-.354.149c-.1.1-.149.217-.149.354v3.37H1.08a.483.483 0 0 0-.354.15c-.1.099-.149.217-.149.353v1.23c0 .136.05.254.149.353.1.1.217.149.354.149h3.333v3.39c0 .136.05.254.15.353.098.1.216.149.353.149H6.33Z" /></svg>
-                                    </CounterButton>
-                                    <Value>{comment.score}</Value>
-                                    <CounterButton id={comment.id} onClick={() => handleCounterDecrementClick(comment.id)}>
-                                        <svg width="11" height="3" xmlns="http://www.w3.org/2000/svg"><path d="M9.256 2.66c.204 0 .38-.056.53-.167.148-.11.222-.243.222-.396V.722c0-.152-.074-.284-.223-.395a.859.859 0 0 0-.53-.167H.76a.859.859 0 0 0-.53.167C.083.437.009.57.009.722v1.375c0 .153.074.285.223.396a.859.859 0 0 0 .53.167h8.495Z" /></svg>
-                                    </CounterButton>
-                                </CounterWrapper>
-                                <Content>
-                                    <Header>
-                                        <Profile>
-                                            <Image src={comment.user.image.webp} alt={comment.user.username} />
-                                            <Heading>
-                                                {comment.user.username}
-                                            </Heading>
-                                            {currentUser.id == comment.user.id ?
-                                                <Tag>
-                                                    you
-                                                </Tag>
-                                                :
-                                                null
-                                            }
-                                            <Paragraph>
-                                                {comment.timestamp}
-                                            </Paragraph>
-                                        </Profile>
-                                        <ButtonList>
-                                            {currentUser.id == comment.user.id ?
-                                                <>
-                                                    <li>
-                                                        <Button red id={comment.id} onClick={() => handleDeleteClick(comment.id)}>
-                                                            <svg width="12" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M1.167 12.448c0 .854.7 1.552 1.555 1.552h6.222c.856 0 1.556-.698 1.556-1.552V3.5H1.167v8.948Zm10.5-11.281H8.75L7.773 0h-3.88l-.976 1.167H0v1.166h11.667V1.167Z" /></svg>
-                                                            Delete
-                                                        </Button>
-                                                    </li>
-                                                    <li>
-                                                        <Button id={comment.id} onClick={() => handleEditClick(comment.id)}>
-                                                            <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M13.479 2.872 11.08.474a1.75 1.75 0 0 0-2.327-.06L.879 8.287a1.75 1.75 0 0 0-.5 1.06l-.375 3.648a.875.875 0 0 0 .875.954h.078l3.65-.333c.399-.04.773-.216 1.058-.499l7.875-7.875a1.68 1.68 0 0 0-.061-2.371Zm-2.975 2.923L8.159 3.449 9.865 1.7l2.389 2.39-1.75 1.706Z" /></svg>
-                                                            Edit
-                                                        </Button>
-                                                    </li>
-                                                </>
-                                                :
-                                                null}
-                                            <li>
-                                                <Button id={comment.id} onClick={() => handleReplyClick(comment.id)}>
-                                                    <svg width="14" height="13" xmlns="http://www.w3.org/2000/svg"><path d="M.227 4.316 5.04.16a.657.657 0 0 1 1.085.497v2.189c4.392.05 7.875.93 7.875 5.093 0 1.68-1.082 3.344-2.279 4.214-.373.272-.905-.07-.767-.51 1.24-3.964-.588-5.017-4.829-5.078v2.404c0 .566-.664.86-1.085.496L.227 5.31a.657.657 0 0 1 0-.993Z" /></svg>
-                                                    Reply
-                                                </Button>
-                                            </li>
-                                        </ButtonList>
-                                    </Header>
-                                    {comment.isEditing ?
-                                        <form onSubmit={handleCommentUpdate} method='PUT'>
-                                            <Textarea
-                                                defaultValue={comment.content}
-                                            >
-                                            </Textarea>
-                                            <AppButton id={comment.id}>Update</AppButton>
-                                        </form>
-                                        :
-                                        <Paragraph>
-                                            {comment.content}
-                                        </Paragraph>}
-                                    <Footer>
-                                        <CounterWrapperMobile>
-                                            <CounterButton id={comment.id} onClick={() => handleCounterIncrementClick(comment.id)}>
-                                                <svg width="11" height="11" xmlns="http://www.w3.org/2000/svg"><path d="M6.33 10.896c.137 0 .255-.05.354-.149.1-.1.149-.217.149-.354V7.004h3.315c.136 0 .254-.05.354-.149.099-.1.148-.217.148-.354V5.272a.483.483 0 0 0-.148-.354.483.483 0 0 0-.354-.149H6.833V1.4a.483.483 0 0 0-.149-.354.483.483 0 0 0-.354-.149H4.915a.483.483 0 0 0-.354.149c-.1.1-.149.217-.149.354v3.37H1.08a.483.483 0 0 0-.354.15c-.1.099-.149.217-.149.353v1.23c0 .136.05.254.149.353.1.1.217.149.354.149h3.333v3.39c0 .136.05.254.15.353.098.1.216.149.353.149H6.33Z" /></svg>
-                                            </CounterButton>
-                                            <Value>{comment.score}</Value>
-                                            <CounterButton id={comment.id} onClick={() => handleCounterDecrementClick(comment.id)}>
-                                                <svg width="11" height="3" xmlns="http://www.w3.org/2000/svg"><path d="M9.256 2.66c.204 0 .38-.056.53-.167.148-.11.222-.243.222-.396V.722c0-.152-.074-.284-.223-.395a.859.859 0 0 0-.53-.167H.76a.859.859 0 0 0-.53.167C.083.437.009.57.009.722v1.375c0 .153.074.285.223.396a.859.859 0 0 0 .53.167h8.495Z" /></svg>
-                                            </CounterButton>
-                                        </CounterWrapperMobile>
-                                        <ButtonListMobile>
-                                            {currentUser.id == comment.user.id ?
-                                                <>
-                                                    <li>
-                                                        <Button red id={comment.id} onClick={() => handleDeleteClick(comment.id)}>
-                                                            <svg width="12" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M1.167 12.448c0 .854.7 1.552 1.555 1.552h6.222c.856 0 1.556-.698 1.556-1.552V3.5H1.167v8.948Zm10.5-11.281H8.75L7.773 0h-3.88l-.976 1.167H0v1.166h11.667V1.167Z" /></svg>
-                                                            Delete
-                                                        </Button>
-                                                    </li>
-                                                    <li>
-                                                        <Button id={comment.id} onClick={() => handleEditClick(comment.id)}>
-                                                            <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M13.479 2.872 11.08.474a1.75 1.75 0 0 0-2.327-.06L.879 8.287a1.75 1.75 0 0 0-.5 1.06l-.375 3.648a.875.875 0 0 0 .875.954h.078l3.65-.333c.399-.04.773-.216 1.058-.499l7.875-7.875a1.68 1.68 0 0 0-.061-2.371Zm-2.975 2.923L8.159 3.449 9.865 1.7l2.389 2.39-1.75 1.706Z" /></svg>
-                                                            Edit
-                                                        </Button>
-                                                    </li>
-                                                </>
-                                                :
-                                                null}
-                                            <li>
-                                                <Button id={comment.id} onClick={() => handleReplyClick(comment.id)}>
-                                                    <svg width="14" height="13" xmlns="http://www.w3.org/2000/svg"><path d="M.227 4.316 5.04.16a.657.657 0 0 1 1.085.497v2.189c4.392.05 7.875.93 7.875 5.093 0 1.68-1.082 3.344-2.279 4.214-.373.272-.905-.07-.767-.51 1.24-3.964-.588-5.017-4.829-5.078v2.404c0 .566-.664.86-1.085.496L.227 5.31a.657.657 0 0 1 0-.993Z" /></svg>
-                                                    Reply
-                                                </Button>
-                                            </li>
-                                        </ButtonListMobile>
-                                    </Footer>
-                                </Content>
-                            </CommentWrapper>
-                            {
-                                comment.isReplying ?
-                                    <CommentAdd
-                                        picture={currentUser.image.webp}
-                                        username={currentUser.username}
-                                        button={<AppButton>Reply</AppButton>}
-                                    />
-                                    :
-                                    null
-                            }
-                        </ReplyItem>
-                    </>
-                    :
-                    <>
-                        {
-                            comment.isDeleting ?
-                                <WrapperModal>
-                                    <Modal>
-                                        <HeadingModal>Delete comment</HeadingModal>
-                                        <ParagraphModal>
-                                            Are you sure you want to delete this comment?
-                                            This will remove the comment and can’t be undone.
-                                        </ParagraphModal>
-                                        <ButtonListModal>
-                                            <li><AppButton id={comment.id} onClick={() => handleDeleteClick(comment.id)}>No, cancel</AppButton></li>
-                                            <li><AppButton>Yes, delete</AppButton></li>
+                                            <li><AppButton id={comment.id}>Yes, delete</AppButton></li>
                                         </ButtonListModal>
                                     </Modal>
                                 </WrapperModal>
@@ -722,16 +643,165 @@ function Comments() {
                                 </Content>
                             </CommentWrapper>
                             {comment.isReplying ?
-                                <CommentAdd
-                                    picture={currentUser.image.webp}
-                                    username={currentUser.username}
-                                    button={<AppButton>Send</AppButton>}
-                                />
+                                <form onSubmit={handleReply} method="POST">
+                                    <CommentAddItem>
+                                        <CommentAddWrapper>
+                                            <CommentAddImage src={currentUser.image.webp} alt={currentUser.username} />
+                                            <CommentAddTextarea></CommentAddTextarea>
+                                            <AppButton data-reply="true" id={comment.id}>Reply</AppButton>
+                                        </CommentAddWrapper>
+                                    </CommentAddItem>
+                                </form>
                                 :
                                 null
                             }
                         </CommenItem>
+                        {comment.replies.map((reply => (
+                            <>
+                                {
+                                    reply.isDeleting ?
+                                        <WrapperModal>
+                                            <Modal onSubmit={handleCommentDelete} method='delete'>
+                                                <HeadingModal>Delete comment</HeadingModal>
+                                                <ParagraphModal>
+                                                    Are you sure you want to delete this comment?
+                                                    This will remove the comment and can’t be undone.
+                                                </ParagraphModal>
+                                                <ButtonListModal>
+                                                    <li><AppButton id={reply.id} onClick={() => handleDeleteClick(reply.id)}>No, cancel</AppButton></li>
+                                                    <li><AppButton id={reply.id}>Yes, delete</AppButton></li>
+                                                </ButtonListModal>
+                                            </Modal>
+                                        </WrapperModal>
+                                        :
+                                        null
+                                }
+                                <ReplyItem>
+                                    <CommentWrapper>
+                                        <CounterWrapper>
+                                            <CounterButton id={reply.id} onClick={() => handleCounterIncrementClick(reply.id)}>
+                                                <svg width="11" height="11" xmlns="http://www.w3.org/2000/svg"><path d="M6.33 10.896c.137 0 .255-.05.354-.149.1-.1.149-.217.149-.354V7.004h3.315c.136 0 .254-.05.354-.149.099-.1.148-.217.148-.354V5.272a.483.483 0 0 0-.148-.354.483.483 0 0 0-.354-.149H6.833V1.4a.483.483 0 0 0-.149-.354.483.483 0 0 0-.354-.149H4.915a.483.483 0 0 0-.354.149c-.1.1-.149.217-.149.354v3.37H1.08a.483.483 0 0 0-.354.15c-.1.099-.149.217-.149.353v1.23c0 .136.05.254.149.353.1.1.217.149.354.149h3.333v3.39c0 .136.05.254.15.353.098.1.216.149.353.149H6.33Z" /></svg>
+                                            </CounterButton>
+                                            <Value>{reply.score}</Value>
+                                            <CounterButton id={reply.id} onClick={() => handleCounterDecrementClick(reply.id)}>
+                                                <svg width="11" height="3" xmlns="http://www.w3.org/2000/svg"><path d="M9.256 2.66c.204 0 .38-.056.53-.167.148-.11.222-.243.222-.396V.722c0-.152-.074-.284-.223-.395a.859.859 0 0 0-.53-.167H.76a.859.859 0 0 0-.53.167C.083.437.009.57.009.722v1.375c0 .153.074.285.223.396a.859.859 0 0 0 .53.167h8.495Z" /></svg>
+                                            </CounterButton>
+                                        </CounterWrapper>
+                                        <Content>
+                                            <Header>
+                                                <Profile>
+                                                    <Image src={reply.user.image.webp} alt={reply.user.username} />
+                                                    <Heading>
+                                                        {reply.user.username}
+                                                    </Heading>
+                                                    {currentUser.id == reply.user.id ?
+                                                        <Tag>
+                                                            you
+                                                        </Tag>
+                                                        :
+                                                        null
+                                                    }
+                                                    <Paragraph>
+                                                        {reply.timestamp}
+                                                    </Paragraph>
+                                                </Profile>
+                                                <ButtonList>
+                                                    {currentUser.id == reply.user.id ?
+                                                        <>
+                                                            <li>
+                                                                <Button red id={reply.id} onClick={() => handleDeleteClick(reply.id)}>
+                                                                    <svg width="12" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M1.167 12.448c0 .854.7 1.552 1.555 1.552h6.222c.856 0 1.556-.698 1.556-1.552V3.5H1.167v8.948Zm10.5-11.281H8.75L7.773 0h-3.88l-.976 1.167H0v1.166h11.667V1.167Z" /></svg>
+                                                                    Delete
+                                                                </Button>
+                                                            </li>
+                                                            <li>
+                                                                <Button id={reply.id} onClick={() => handleEditClick(reply.id)}>
+                                                                    <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M13.479 2.872 11.08.474a1.75 1.75 0 0 0-2.327-.06L.879 8.287a1.75 1.75 0 0 0-.5 1.06l-.375 3.648a.875.875 0 0 0 .875.954h.078l3.65-.333c.399-.04.773-.216 1.058-.499l7.875-7.875a1.68 1.68 0 0 0-.061-2.371Zm-2.975 2.923L8.159 3.449 9.865 1.7l2.389 2.39-1.75 1.706Z" /></svg>
+                                                                    Edit
+                                                                </Button>
+                                                            </li>
+                                                        </>
+                                                        :
+                                                        null}
+                                                    <li>
+                                                        <Button id={reply.id} onClick={() => handleReplyClick(reply.id)}>
+                                                            <svg width="14" height="13" xmlns="http://www.w3.org/2000/svg"><path d="M.227 4.316 5.04.16a.657.657 0 0 1 1.085.497v2.189c4.392.05 7.875.93 7.875 5.093 0 1.68-1.082 3.344-2.279 4.214-.373.272-.905-.07-.767-.51 1.24-3.964-.588-5.017-4.829-5.078v2.404c0 .566-.664.86-1.085.496L.227 5.31a.657.657 0 0 1 0-.993Z" /></svg>
+                                                            Reply
+                                                        </Button>
+                                                    </li>
+                                                </ButtonList>
+                                            </Header>
+                                            {reply.isEditing ?
+                                                <form onSubmit={handleCommentUpdate} method='PUT'>
+                                                    <Textarea
+                                                        defaultValue={reply.content}
+                                                    >
+                                                    </Textarea>
+                                                    <AppButton id={reply.id}>Update</AppButton>
+                                                </form>
+                                                :
+                                                <Paragraph>
+                                                    {reply.content}
+                                                </Paragraph>}
+                                            <Footer>
+                                                <CounterWrapperMobile>
+                                                    <CounterButton id={reply.id} onClick={() => handleCounterIncrementClick(reply.id)}>
+                                                        <svg width="11" height="11" xmlns="http://www.w3.org/2000/svg"><path d="M6.33 10.896c.137 0 .255-.05.354-.149.1-.1.149-.217.149-.354V7.004h3.315c.136 0 .254-.05.354-.149.099-.1.148-.217.148-.354V5.272a.483.483 0 0 0-.148-.354.483.483 0 0 0-.354-.149H6.833V1.4a.483.483 0 0 0-.149-.354.483.483 0 0 0-.354-.149H4.915a.483.483 0 0 0-.354.149c-.1.1-.149.217-.149.354v3.37H1.08a.483.483 0 0 0-.354.15c-.1.099-.149.217-.149.353v1.23c0 .136.05.254.149.353.1.1.217.149.354.149h3.333v3.39c0 .136.05.254.15.353.098.1.216.149.353.149H6.33Z" /></svg>
+                                                    </CounterButton>
+                                                    <Value>{reply.score}</Value>
+                                                    <CounterButton id={reply.id} onClick={() => handleCounterDecrementClick(reply.id)}>
+                                                        <svg width="11" height="3" xmlns="http://www.w3.org/2000/svg"><path d="M9.256 2.66c.204 0 .38-.056.53-.167.148-.11.222-.243.222-.396V.722c0-.152-.074-.284-.223-.395a.859.859 0 0 0-.53-.167H.76a.859.859 0 0 0-.53.167C.083.437.009.57.009.722v1.375c0 .153.074.285.223.396a.859.859 0 0 0 .53.167h8.495Z" /></svg>
+                                                    </CounterButton>
+                                                </CounterWrapperMobile>
+                                                <ButtonListMobile>
+                                                    {currentUser.id == reply.user.id ?
+                                                        <>
+                                                            <li>
+                                                                <Button red id={reply.id} onClick={() => handleDeleteClick(reply.id)}>
+                                                                    <svg width="12" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M1.167 12.448c0 .854.7 1.552 1.555 1.552h6.222c.856 0 1.556-.698 1.556-1.552V3.5H1.167v8.948Zm10.5-11.281H8.75L7.773 0h-3.88l-.976 1.167H0v1.166h11.667V1.167Z" /></svg>
+                                                                    Delete
+                                                                </Button>
+                                                            </li>
+                                                            <li>
+                                                                <Button id={reply.id} onClick={() => handleEditClick(reply.id)}>
+                                                                    <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path d="M13.479 2.872 11.08.474a1.75 1.75 0 0 0-2.327-.06L.879 8.287a1.75 1.75 0 0 0-.5 1.06l-.375 3.648a.875.875 0 0 0 .875.954h.078l3.65-.333c.399-.04.773-.216 1.058-.499l7.875-7.875a1.68 1.68 0 0 0-.061-2.371Zm-2.975 2.923L8.159 3.449 9.865 1.7l2.389 2.39-1.75 1.706Z" /></svg>
+                                                                    Edit
+                                                                </Button>
+                                                            </li>
+                                                        </>
+                                                        :
+                                                        null}
+                                                    <li>
+                                                        <Button id={reply.id} onClick={() => handleReplyClick(reply.id)}>
+                                                            <svg width="14" height="13" xmlns="http://www.w3.org/2000/svg"><path d="M.227 4.316 5.04.16a.657.657 0 0 1 1.085.497v2.189c4.392.05 7.875.93 7.875 5.093 0 1.68-1.082 3.344-2.279 4.214-.373.272-.905-.07-.767-.51 1.24-3.964-.588-5.017-4.829-5.078v2.404c0 .566-.664.86-1.085.496L.227 5.31a.657.657 0 0 1 0-.993Z" /></svg>
+                                                            Reply
+                                                        </Button>
+                                                    </li>
+                                                </ButtonListMobile>
+                                            </Footer>
+                                        </Content>
+                                    </CommentWrapper>
+                                    {
+                                        reply.isReplying ?
+                                            <form onSubmit={handleReply} method="POST">
+                                                <CommentAddItem>
+                                                    <CommentAddWrapper>
+                                                        <CommentAddImage src={currentUser.image.webp} alt={currentUser.username} />
+                                                        <CommentAddTextarea></CommentAddTextarea>
+                                                        <AppButton>Reply</AppButton>
+                                                    </CommentAddWrapper>
+                                                </CommentAddItem>
+                                            </form>
+                                            :
+                                            null
+                                    }
+                                </ReplyItem>
+                            </>
+                        )))}
+
                     </>
+                    :
+                    null
             ))
             }
             <form onSubmit={handleSubmit} method="POST">

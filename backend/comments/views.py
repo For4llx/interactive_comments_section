@@ -7,7 +7,7 @@ from .serializers import CommentSerializer
 
 
 class CommentViewset(ModelViewSet):
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.filter(reply=False)
     serializer_class = CommentSerializer
 
     def create(self, request):
@@ -15,9 +15,14 @@ class CommentViewset(ModelViewSet):
         comment_data = {
             "user": current_user,
             "content": request.data["content"],
+            "reply": request.data["reply"],
         }
         new_comment = Comment(**comment_data)
         new_comment.save()
+        if request.data["reply"]:
+            comment_repleid_to = Comment.objects.get(id=request.data["repliedTo"])
+            comment_repleid_to.replies.add(new_comment)
+            comment_repleid_to.save()
         return Response({"status": "Custom action completed"})
 
     def update(self, request, pk=None):
@@ -26,6 +31,11 @@ class CommentViewset(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"status": "current_comment"})
+
+    def partial_update(self, request, pk=None):
+        comment_instance = self.get_object()
+        comment_instance.replies.add(1)
+        return Response({"status": "200"})
 
     def delete(self, request, pk=None):
         instance = self.get_object()

@@ -34,6 +34,11 @@ const CommentAddTextarea = styled.textarea`
     }
 `
 
+const CommentAddItem = styled.li`
+    width: 100%;
+    padding-top: 0.5rem;
+`
+
 const Item = styled.li`
     width: 100%;
     padding-top: 0.5rem;
