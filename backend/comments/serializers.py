@@ -8,9 +8,10 @@ class CommentSerializer(ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = "__all__"
+        exclude = ("replies",)
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep["replies"] = CommentSerializer(instance.replies.all(), many=True).data
+        if not instance.reply:
+            rep["replies"] = CommentSerializer(instance.replies.all(), many=True).data
         return rep

@@ -9,7 +9,7 @@ class Comment(models.Model):
     score = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     reply = models.BooleanField(blank=True, null=True, default=False)
-    replies = models.ManyToManyField("self", symmetrical=False, default=[])
+    replies = models.ManyToManyField("self", symmetrical=False, default=[], blank=True)
 
     def __str__(self):
         return self.user.username
