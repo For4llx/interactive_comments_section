@@ -1,5 +1,4 @@
 import { createGlobalStyle } from 'styled-components'
-import styledComponents from "styled-components";
 
 
 export const GlobalStyles = createGlobalStyle`
@@ -13,7 +12,7 @@ export const GlobalStyles = createGlobalStyle`
     html, body, #root {
         width: 100%;
         height: 100%;
-        background-color: ${props => props.theme.veryLightGray};
+        background-color: #F5F6FA;
     }
 
     a {
