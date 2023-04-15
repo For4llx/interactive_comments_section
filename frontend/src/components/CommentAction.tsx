@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 
 interface Props {
-    delete: boolean
+    delete?: boolean
 }
 
 export default styled.button<Props>`
