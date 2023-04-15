@@ -1,17 +1,17 @@
-import styled, { createGlobalStyle } from 'styled-components'
+import { createGlobalStyle } from 'styled-components'
 
 export const GlobalStyles = createGlobalStyle`
     * {
         padding: 0;
         margin: 0;
         box-sizing: border-box;
-        font-family: 'Manrope', sans-serif;
+        font-family: 'Rubik', sans-serif;
     }
 
     html, body, #root {
         width: 100%;
         height: 100%;
-        background-color: ${props => props.theme.veryLightGray};
+        background-color: #F5F6FA;
     }
 
     a {

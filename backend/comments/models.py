@@ -12,7 +12,7 @@ class Comment(models.Model):
     replies = models.ManyToManyField("self", symmetrical=False, default=[], blank=True)
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username} {self.id}"
 
     @property
     def timesince(self):

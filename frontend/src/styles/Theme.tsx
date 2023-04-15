@@ -1,4 +1,6 @@
-export const Theme = {
+import { DefaultTheme } from 'styled-components';
+
+const Theme: DefaultTheme = {
     /* Layout */
     mobile: "375px",
     desktop: "1440px",
@@ -22,3 +24,5 @@ export const Theme = {
     /* Typography Font */
     family: "Rubik",
 };
+
+export { Theme };
