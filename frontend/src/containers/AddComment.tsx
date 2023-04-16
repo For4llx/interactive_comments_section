@@ -4,17 +4,24 @@ import AddCommentPicture from '../components/AddCommentPicture';
 import AddCommentContainer from "../components/AddCommentContainer";
 import AddCommentFormAdd from "../components/AddCommentForm";
 
-function AddComment() {
+interface Props {
+    username: string,
+    srcPrimary: string,
+    srcDefault: string,
+    buttonText: string,
+}
+
+const AddComment: React.FC<Props> = (props) => {
     return (
         <AddCommentContainer>
             <AddCommentPicture
-                alt="juliusomo"
-                srcPrimary="./images/avatars/image-juliusomo.webp"
-                srcDefault="./images/avatars/image-juliusomo.png"
+                alt={props.username}
+                srcPrimary={props.srcPrimary}
+                srcDefault={props.srcDefault}
             />
             <AddCommentFormAdd>
                 <AddCommentTextarea placeholder="Add a comment…"></AddCommentTextarea>
-                <AppButton>Send</AppButton>
+                <AppButton>{props.buttonText}</AppButton>
             </AddCommentFormAdd>
         </AddCommentContainer>
     )
