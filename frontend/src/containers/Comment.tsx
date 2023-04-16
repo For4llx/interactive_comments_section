@@ -1,3 +1,6 @@
+import { useCallback, useState } from 'react';
+import AppLayer from '../components/AppLayer';
+import AppButton from '../components/AppButton'
 import AppHeading from "../components/AppHeading"
 import AppParagraph from "../components/AppParagraph"
 import CommentContainer from "../components/CommentContainer"
@@ -10,43 +13,117 @@ import CommentReplyIcon from "../components/CommentReplyIcon"
 import CommentDeleteIcon from "../components/CommentDeleteIcon"
 import CommentEditIcon from "../components/CommentEditIcon"
 import CommentContent from "../components/CommentContent"
+import CommentOwner from "../components/CommentOwner"
+import AddComment from "./AddComment"
+import Counter from "./Counter"
+import CommentModalContainer from '../components/CommentModalContainer';
+import AddCommentTextarea from "../components/AddCommentTextarea"
 
-function Comment() {
+interface Props {
+    username: string,
+    createdAt: string,
+    content: string,
+    counterValue: number,
+    pictureSrcPrimary: string,
+    pictureSrcDefault: string,
+    currentUser: number,
+    commentUserId: number,
+}
+
+const useToggle = (initialState: boolean = false): [boolean, any] => {
+    // Initialize the state
+    const [state, setState] = useState<boolean>(initialState);
+
+    // Define and memorize toggler function in case we pass down the comopnent,
+    // This function change the boolean value to it's opposite value
+    const toggle = useCallback((): void => setState(state => !state), []);
+
+    return [state, toggle]
+}
+
+const Comment: React.FC<Props> = (props) => {
+    const [isReplyMode, setIsReplyMode] = useToggle();
+    const [isEditMode, setIsEditMode] = useToggle();
+    const [isDeletetMode, setIsDeleteMode] = useToggle();
+
     return (
-        <CommentContainer>
-            <CommentContent>
-                <CommentHeader>
-                    <CommentProfile>
-                        <CommentPicture
-                            alt="juliusomo"
-                            srcPrimary="./images/avatars/image-juliusomo.webp"
-                            srcDefault="./images/avatars/image-juliusomo.png"
-                        />
-                        <AppHeading>
-                            juliusomo
-                        </AppHeading>
-                        <AppParagraph>1 week ago</AppParagraph>
-                    </CommentProfile>
-                    <CommentActionList>
-                        <CommentAction delete>
-                            <CommentDeleteIcon />
-                            Delete
-                        </CommentAction>
-                        <CommentAction>
-                            <CommentEditIcon />
-                            Edit
-                        </CommentAction>
-                        <CommentAction>
-                            <CommentReplyIcon />
-                            Reply
-                        </CommentAction>
-                    </CommentActionList>
-                </CommentHeader>
-                <AppParagraph>
-                    Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. You’ve nailed the design and the responsiveness at various breakpoints works really well.
-                </AppParagraph>
-            </CommentContent>
-        </CommentContainer>
+        <>
+            {isDeletetMode &&
+                <AppLayer>
+                    <CommentModalContainer>
+                        <AppHeading>Delete comment</AppHeading>
+                        <AppParagraph>
+                            Are you sure you want to delete this comment?
+                            This will remove the comment and can’t be undone.
+                        </AppParagraph>
+                        <AppButton large cancel onClick={setIsDeleteMode}>No, cancel</AppButton>
+                        <AppButton large delete>Yes, delete</AppButton>
+                    </CommentModalContainer>
+                </AppLayer>
+            }
+            <CommentContainer>
+                <Counter
+                    counterValue={props.counterValue}
+                />
+                <CommentContent>
+                    <CommentHeader>
+                        <CommentProfile>
+                            <CommentPicture
+                                alt={props.username}
+                                srcPrimary={props.pictureSrcPrimary}
+                                srcDefault={props.pictureSrcDefault}
+                            />
+                            <AppHeading>
+                                {props.username}
+                            </AppHeading>
+                            {props.currentUser == props.commentUserId &&
+                                <CommentOwner>you</CommentOwner>
+                            }
+                            <AppParagraph>{props.createdAt}</AppParagraph>
+                        </CommentProfile>
+                        <CommentActionList>
+                            {props.currentUser == props.commentUserId &&
+                                <>
+                                    <CommentAction delete onClick={setIsDeleteMode}>
+                                        <CommentDeleteIcon />
+                                        Delete
+                                    </CommentAction>
+                                    <CommentAction onClick={setIsEditMode}>
+                                        <CommentEditIcon />
+                                        Edit
+                                    </CommentAction>
+                                </>
+                            }
+                            <CommentAction onClick={setIsReplyMode}>
+                                <CommentReplyIcon />
+                                Reply
+                            </CommentAction>
+                        </CommentActionList>
+                    </CommentHeader>
+                    {isEditMode ?
+                        <form>
+                            <AddCommentTextarea
+                                defaultValue={props.content}
+                            >
+                            </AddCommentTextarea>
+                            <AppButton>Update</AppButton>
+                        </form>
+                        :
+                        <AppParagraph>
+                            {props.content}
+                        </AppParagraph>
+                    }
+                </CommentContent>
+            </CommentContainer>
+            {isReplyMode &&
+                <AddComment
+                    username={props.username}
+                    srcPrimary={props.pictureSrcPrimary}
+                    srcDefault={props.pictureSrcDefault}
+                    buttonText="Reply"
+                />
+            }
+        </>
     )
 }
 

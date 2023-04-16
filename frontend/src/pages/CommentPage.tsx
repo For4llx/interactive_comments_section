@@ -1,15 +1,16 @@
+import { QueryClient, QueryClientProvider } from 'react-query';
+import CommentList from '../containers/CommentList';
 import AppContainer from '../components/AppContainer';
-import AddComment from '../containers/AddComment';
-import Counter from '../containers/Counter';
-import Comment from '../containers/Comment';
+
+const queryClient = new QueryClient();
 
 function CommentPage() {
     return (
-        <AppContainer>
-            <Counter />
-            <Comment />
-            <AddComment />
-        </AppContainer>
+        <QueryClientProvider client={queryClient}>
+            <AppContainer>
+                <CommentList />
+            </AppContainer>
+        </QueryClientProvider>
     )
 }
 
