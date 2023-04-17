@@ -3,7 +3,7 @@ import { useQuery } from "react-query";
 import CommentReplyList from "../components/CommentReplyList";
 import Comment from "./Comment"
 
-interface CommentInterface {
+interface IComment {
     id: number;
     user: {
         id: number
@@ -17,17 +17,36 @@ interface CommentInterface {
     content: string;
     score: number;
     reply: boolean;
-    replies: Array<CommentInterface>;
+    replies: Array<IComment>;
 }
+
+interface IUser {
+    id: number;
+    image?: {
+        png: string
+        webp: string
+    }
+    username: string
+}
+
 
 
 async function fetchComments() {
     const response = await fetch("http://127.0.0.1:8000/comments/");
     return response.json();
 }
+
+async function fetchCurrentUser() {
+    const response = await fetch("http://127.0.0.1:8000/users/5");
+    return response.json();
+}
+
+
 const CommentList: React.FC = () => {
-    const [comments, setComments] = useState<CommentInterface[]>([]);
+    const [currentUser, setcurrentUser] = useState<IUser>({});
+    const [comments, setComments] = useState<IComment[]>([]);
     useQuery('comments', fetchComments, { onSuccess: (data) => { setComments(data) } });
+    useQuery('currentUser', fetchCurrentUser, { onSuccess: (data) => { setcurrentUser(data) } });
 
     return (
         <>
@@ -36,7 +55,7 @@ const CommentList: React.FC = () => {
                 <li key={comment.id}>
                     <Comment
                         username={comment.user.username}
-                        currentUser={5}
+                        currentUser={currentUser}
                         commentUserId={comment.user.id}
                         pictureSrcPrimary={comment.user.image.webp}
                         pictureSrcDefault={comment.user.image.png}
@@ -49,7 +68,7 @@ const CommentList: React.FC = () => {
                             <li key={reply.id}>
                                 <Comment
                                     username={reply.user.username}
-                                    currentUser={4}
+                                    currentUser={currentUser}
                                     commentUserId={reply.user.id}
                                     pictureSrcPrimary={reply.user.image.webp}
                                     pictureSrcDefault={reply.user.image.png}
