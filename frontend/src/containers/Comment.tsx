@@ -18,7 +18,8 @@ import AddComment from "./AddComment"
 import Counter from "./Counter"
 import CommentModalContainer from '../components/CommentModalContainer';
 import AddCommentTextarea from "../components/AddCommentTextarea"
-
+import CommentEditForm from '../components/CommentEditForm';
+import CommentModalForm from '../components/CommentModalForm';
 interface Props {
     username: string,
     createdAt: string,
@@ -26,7 +27,7 @@ interface Props {
     counterValue: number,
     pictureSrcPrimary: string,
     pictureSrcDefault: string,
-    currentUser: number,
+    currentUser: any,
     commentUserId: number,
 }
 
@@ -45,19 +46,28 @@ const Comment: React.FC<Props> = (props) => {
     const [isReplyMode, setIsReplyMode] = useToggle();
     const [isEditMode, setIsEditMode] = useToggle();
     const [isDeletetMode, setIsDeleteMode] = useToggle();
+    const [content, setContent] = useState(props.content);
+
+    const handleUpdateContent = (e: React.FormEvent<HTMLFormElement>): void => {
+        e.preventDefault()
+        setContent(e.currentTarget.content.value)
+        setIsEditMode()
+    }
 
     return (
         <>
             {isDeletetMode &&
                 <AppLayer>
                     <CommentModalContainer>
-                        <AppHeading>Delete comment</AppHeading>
+                        <AppHeading large>Delete comment</AppHeading>
                         <AppParagraph>
                             Are you sure you want to delete this comment?
                             This will remove the comment and can’t be undone.
                         </AppParagraph>
-                        <AppButton large cancel onClick={setIsDeleteMode}>No, cancel</AppButton>
-                        <AppButton large delete>Yes, delete</AppButton>
+                        <CommentModalForm>
+                            <AppButton large cancel onClick={setIsDeleteMode}>No, cancel</AppButton>
+                            <AppButton large delete>Yes, delete</AppButton>
+                        </CommentModalForm>
                     </CommentModalContainer>
                 </AppLayer>
             }
@@ -76,13 +86,13 @@ const Comment: React.FC<Props> = (props) => {
                             <AppHeading>
                                 {props.username}
                             </AppHeading>
-                            {props.currentUser == props.commentUserId &&
+                            {props.currentUser.id == props.commentUserId &&
                                 <CommentOwner>you</CommentOwner>
                             }
                             <AppParagraph>{props.createdAt}</AppParagraph>
                         </CommentProfile>
                         <CommentActionList>
-                            {props.currentUser == props.commentUserId &&
+                            {props.currentUser.id == props.commentUserId &&
                                 <>
                                     <CommentAction delete onClick={setIsDeleteMode}>
                                         <CommentDeleteIcon />
@@ -101,25 +111,26 @@ const Comment: React.FC<Props> = (props) => {
                         </CommentActionList>
                     </CommentHeader>
                     {isEditMode ?
-                        <form>
+                        <CommentEditForm onSubmit={handleUpdateContent}>
                             <AddCommentTextarea
-                                defaultValue={props.content}
+                                name='content'
+                                defaultValue={content}
                             >
                             </AddCommentTextarea>
                             <AppButton>Update</AppButton>
-                        </form>
+                        </CommentEditForm>
                         :
                         <AppParagraph>
-                            {props.content}
+                            {content}
                         </AppParagraph>
                     }
                 </CommentContent>
             </CommentContainer>
             {isReplyMode &&
                 <AddComment
-                    username={props.username}
-                    srcPrimary={props.pictureSrcPrimary}
-                    srcDefault={props.pictureSrcDefault}
+                    username={props.currentUser.username}
+                    srcPrimary={props.currentUser.image.webp}
+                    srcDefault={props.currentUser.image.png}
                     buttonText="Reply"
                 />
             }

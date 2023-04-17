@@ -12,9 +12,14 @@ interface Props {
 const Counter: React.FC<Props> = (props) => {
     const [count, setCount] = useState(props.counterValue);
 
+    const handleIncrementCount = (e): void => {
+        e.preventDefault()
+        setCount(e)
+    }
+
     return (
         <CounterContainer>
-            <CounterButton onClick={() => setCount(prevCount => prevCount + 1)}>
+            <CounterButton onClick={handleIncrementCount}>
                 <CounterPlusIcon />
             </CounterButton>
             <CounterValue>{count}</CounterValue>
