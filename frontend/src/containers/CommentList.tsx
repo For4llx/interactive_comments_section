@@ -42,6 +42,7 @@ async function fetchCurrentUser() {
 }
 
 
+
 const CommentList: React.FC = () => {
     const [currentUser, setcurrentUser] = useState<IUser>({});
     const [comments, setComments] = useState<IComment[]>([]);
@@ -54,6 +55,7 @@ const CommentList: React.FC = () => {
                 !comment.reply &&
                 <li key={comment.id}>
                     <Comment
+                        id={comment.id}
                         username={comment.user.username}
                         currentUser={currentUser}
                         commentUserId={comment.user.id}
@@ -62,11 +64,14 @@ const CommentList: React.FC = () => {
                         createdAt={comment.createdAt}
                         content={comment.content}
                         counterValue={comment.score}
+                        comments={comments}
+                        setComments={setComments}
                     />
                     <CommentReplyList>
                         {comment.replies.map(reply => (
                             <li key={reply.id}>
                                 <Comment
+                                    id={reply.id}
                                     username={reply.user.username}
                                     currentUser={currentUser}
                                     commentUserId={reply.user.id}
@@ -75,6 +80,8 @@ const CommentList: React.FC = () => {
                                     createdAt={reply.createdAt}
                                     content={reply.content}
                                     counterValue={reply.score}
+                                    comments={comments}
+                                    setComments={setComments}
                                 />
                             </li>
                         ))}

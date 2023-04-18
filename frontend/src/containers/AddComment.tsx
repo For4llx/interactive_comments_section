@@ -2,13 +2,15 @@ import AppButton from '../components/AppButton';
 import AddCommentTextarea from '../components/AddCommentTextarea';
 import AddCommentPicture from '../components/AddCommentPicture';
 import AddCommentContainer from "../components/AddCommentContainer";
-import AddCommentFormAdd from "../components/AddCommentForm";
+import AddCommentForm from "../components/AddCommentForm";
 
 interface Props {
+    id: any
     username: string,
     srcPrimary: string,
     srcDefault: string,
     buttonText: string,
+    createComment: any
 }
 
 const AddComment: React.FC<Props> = (props) => {
@@ -19,10 +21,10 @@ const AddComment: React.FC<Props> = (props) => {
                 srcPrimary={props.srcPrimary}
                 srcDefault={props.srcDefault}
             />
-            <AddCommentFormAdd>
-                <AddCommentTextarea placeholder="Add a comment…"></AddCommentTextarea>
-                <AppButton>{props.buttonText}</AppButton>
-            </AddCommentFormAdd>
+            <AddCommentForm onSubmit={props.createComment}>
+                <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
+                <AppButton id={props.id} >{props.buttonText}</AppButton>
+            </AddCommentForm>
         </AddCommentContainer>
     )
 }

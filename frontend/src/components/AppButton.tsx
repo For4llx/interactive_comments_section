@@ -1,9 +1,11 @@
 import styled from 'styled-components'
 
 interface Props {
+    id?: any
     delete?: boolean
     large?: boolean
     cancel?: boolean
+    onClick?: any
 }
 
 export default styled.button<Props>`

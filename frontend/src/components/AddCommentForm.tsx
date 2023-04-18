@@ -1,6 +1,10 @@
 import styled from 'styled-components'
 
-export default styled.form`
+interface Props {
+    onSubmit?: any
+}
+
+export default styled.form<Props>`
     display: flex;
     gap: 1.5rem;
     width: 100%;

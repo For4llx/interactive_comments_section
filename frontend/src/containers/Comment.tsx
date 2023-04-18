@@ -1,4 +1,6 @@
 import { useCallback, useState } from 'react';
+import { useQuery, useMutation } from "react-query";
+
 import AppLayer from '../components/AppLayer';
 import AppButton from '../components/AppButton'
 import AppHeading from "../components/AppHeading"
@@ -20,7 +22,26 @@ import CommentModalContainer from '../components/CommentModalContainer';
 import AddCommentTextarea from "../components/AddCommentTextarea"
 import CommentEditForm from '../components/CommentEditForm';
 import CommentModalForm from '../components/CommentModalForm';
+
+interface IComment {
+    id: number;
+    user: {
+        id: number
+        username: string;
+        image: {
+            webp: string;
+            png: string;
+        };
+    };
+    createdAt: string;
+    content: string;
+    score: number;
+    reply: boolean;
+    replies: Array<IComment>;
+}
+
 interface Props {
+    id: number,
     username: string,
     createdAt: string,
     content: string,
@@ -29,6 +50,8 @@ interface Props {
     pictureSrcDefault: string,
     currentUser: any,
     commentUserId: number,
+    comments: Array<IComment>
+    setComments: Function
 }
 
 const useToggle = (initialState: boolean = false): [boolean, any] => {
@@ -48,12 +71,74 @@ const Comment: React.FC<Props> = (props) => {
     const [isDeletetMode, setIsDeleteMode] = useToggle();
     const [content, setContent] = useState(props.content);
 
-    const handleUpdateContent = (e: React.FormEvent<HTMLFormElement>): void => {
+    const handleEdit = (e: React.FormEvent<HTMLFormElement>): void => {
         e.preventDefault()
         setContent(e.currentTarget.content.value)
         setIsEditMode()
     }
 
+    const handleDelete = (e: any): void => {
+        e.preventDefault()
+        props.setComments((current: any) => current.filter((comment: any) => comment.id != e.target.id))
+    };
+
+
+    const handleReply = (e: any): void => {
+        e.preventDefault()
+        props.setComments(props.comments.map(comment => {
+            if (comment.id === Number(e.target.id)) {
+                return { ...comment, replies: [...comment.replies, comment] };
+            } else {
+                return comment;
+            }
+        }))
+        setIsReplyMode()
+    };
+
+    const createReply = async (reply: any, e: any) => {
+        const response = await fetch(`http://127.0.0.1:8000/comments/218/`, {
+            method: 'PATCH',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "reply_id": reply.id,
+            })
+        })
+        const comment = response.json()
+        props.setComments([...props.comments, comment])
+        console.log(props.comments)
+        handleReply(e)
+        return comment;
+    }
+
+    const createComment = async (e: any) => {
+        e.preventDefault()
+        const response = await fetch('http://127.0.0.1:8000/comments/', {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "user": props.currentUser,
+                "content": "content",
+                "reply": true,
+            })
+        })
+        return response.json()
+    };
+    const { mutate: replyComment } = useMutation(createComment, {
+        onSuccess: ((data, e) => {
+            createReply(data, e)
+        })
+    })
+    const { mutate: z } = useMutation(createComment, {
+        onSuccess: ((data) => {
+            console.log(data)
+        })
+    })
     return (
         <>
             {isDeletetMode &&
@@ -66,7 +151,7 @@ const Comment: React.FC<Props> = (props) => {
                         </AppParagraph>
                         <CommentModalForm>
                             <AppButton large cancel onClick={setIsDeleteMode}>No, cancel</AppButton>
-                            <AppButton large delete>Yes, delete</AppButton>
+                            <AppButton large delete onClick={handleDelete} id={props.id}>Yes, delete</AppButton>
                         </CommentModalForm>
                     </CommentModalContainer>
                 </AppLayer>
@@ -111,7 +196,7 @@ const Comment: React.FC<Props> = (props) => {
                         </CommentActionList>
                     </CommentHeader>
                     {isEditMode ?
-                        <CommentEditForm onSubmit={handleUpdateContent}>
+                        <CommentEditForm onSubmit={handleEdit}>
                             <AddCommentTextarea
                                 name='content'
                                 defaultValue={content}
@@ -128,10 +213,12 @@ const Comment: React.FC<Props> = (props) => {
             </CommentContainer>
             {isReplyMode &&
                 <AddComment
+                    id={props.id}
                     username={props.currentUser.username}
                     srcPrimary={props.currentUser.image.webp}
                     srcDefault={props.currentUser.image.png}
                     buttonText="Reply"
+                    createComment={replyComment}
                 />
             }
         </>
