@@ -52,9 +52,11 @@ class CommentViewset(ModelViewSet):
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
-        reply_data = request.data
+        print("=========================================")
+        print(request.data)
         comment_instance = self.get_object()
-        comment_instance.replies.add(reply_data["reply_id"])
+        reply_instance = Comment.objects.get(id=request.data["reply_id"])
+        comment_instance.replies.add(reply_instance)
         serializer = CommentSerializer(comment_instance)
         return Response(serializer.data)
 

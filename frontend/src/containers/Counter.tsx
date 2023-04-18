@@ -11,11 +11,31 @@ interface Props {
 
 const Counter: React.FC<Props> = (props) => {
     const [count, setCount] = useState(props.counterValue);
+    const [liked, setLiked] = useState(false);
+    const [disliked, setDisliked] = useState(false);
 
-    const handleIncrementCount = (e): void => {
+    const handleIncrementCount = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void => {
         e.preventDefault()
-        setCount(e)
+        if (disliked) {
+            setCount(count + 1)
+            setDisliked(!disliked)
+        } else if (!liked) {
+            setCount(count + 1)
+            setLiked(!liked)
+        }
     }
+
+    const handleDecrementCount = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void => {
+        e.preventDefault()
+        if (liked) {
+            setCount(count - 1)
+            setLiked(!liked)
+        } else if (!disliked) {
+            setCount(count - 1)
+            setDisliked(!disliked)
+        }
+    }
+
 
     return (
         <CounterContainer>
@@ -23,7 +43,7 @@ const Counter: React.FC<Props> = (props) => {
                 <CounterPlusIcon />
             </CounterButton>
             <CounterValue>{count}</CounterValue>
-            <CounterButton onClick={() => setCount(prevCount => prevCount - 1)}>
+            <CounterButton onClick={handleDecrementCount}>
                 <CounterMinusIcon />
             </CounterButton>
         </CounterContainer>
