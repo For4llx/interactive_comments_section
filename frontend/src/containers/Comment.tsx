@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
-import { useQuery, useMutation } from "react-query";
-
+import { FormEventHandler, useCallback, useState } from 'react';
+import { useQuery, useMutation, UseMutationResult } from "react-query";
 import AppLayer from '../components/AppLayer';
 import AppButton from '../components/AppButton'
 import AppHeading from "../components/AppHeading"
@@ -38,6 +37,7 @@ interface IComment {
     score: number;
     reply: boolean;
     replies: Array<IComment>;
+    parentid?: number
 }
 
 interface Props {
@@ -52,6 +52,8 @@ interface Props {
     commentUserId: number,
     comments: Array<IComment>
     setComments: Function
+    parentId?: number
+    parentUsername?: string
 }
 
 const useToggle = (initialState: boolean = false): [boolean, any] => {
@@ -66,6 +68,7 @@ const useToggle = (initialState: boolean = false): [boolean, any] => {
 }
 
 const Comment: React.FC<Props> = (props) => {
+    const [isDisplaying, setIsDisplaying] = useToggle(true);
     const [isReplyMode, setIsReplyMode] = useToggle();
     const [isEditMode, setIsEditMode] = useToggle();
     const [isDeletetMode, setIsDeleteMode] = useToggle();
@@ -77,11 +80,17 @@ const Comment: React.FC<Props> = (props) => {
         setIsEditMode()
     }
 
-    const handleDelete = (e: any): void => {
+    const handleDeleteParent = (e: any): void => {
         e.preventDefault()
-        props.setComments((current: any) => current.filter((comment: any) => comment.id != e.target.id))
+        setIsDisplaying()
+        setIsDeleteMode()
     };
 
+    const handleDeleteReply = (e: any): void => {
+        e.preventDefault()
+        setIsDisplaying()
+        setIsDeleteMode()
+    };
 
     const handleReply = (e: any): void => {
         e.preventDefault()
@@ -95,51 +104,103 @@ const Comment: React.FC<Props> = (props) => {
         setIsReplyMode()
     };
 
-    const createReply = async (reply: any, e: any) => {
-        const response = await fetch(`http://127.0.0.1:8000/comments/218/`, {
-            method: 'PATCH',
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "reply_id": reply.id,
+    const addReply = useMutation({
+        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+            let body = ""
+            if (e.target.send) {
+                body = JSON.stringify({
+                    user: props.currentUser,
+                    content: e.target.content.value,
+                    reply: false
+                })
+            }
+            if (e.target.reply) {
+                body = JSON.stringify({
+                    user: props.currentUser,
+                    content: e.target.content.value,
+                    reply: true,
+                    parent_id: e.target.reply.id,
+                })
+            }
+            const response = await fetch('http://127.0.0.1:8000/comments/', {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: body
             })
-        })
-        const comment = response.json()
-        props.setComments([...props.comments, comment])
-        console.log(props.comments)
+            return response.json()
+        },
+        onSuccess: (comment_instance) => {
+            if (!comment_instance.reply) {
+                props.setComments([...props.comments, comment_instance])
+            } else {
+                const updatedComments = props.comments.map(comment => {
+                    if (comment.id === comment_instance.parent_id) {
+                        return { ...comment, replies: [...comment.replies, comment_instance] }
+                    }
+                    return comment;
+                });
+                props.setComments(updatedComments)
+            }
+        }
+    })
+
+    const handleAddReply = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        addReply.mutate(e)
         handleReply(e)
-        return comment;
     }
 
-    const createComment = async (e: any) => {
-        e.preventDefault()
-        const response = await fetch('http://127.0.0.1:8000/comments/', {
-            method: 'POST',
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "user": props.currentUser,
-                "content": "content",
-                "reply": true,
+    const EditComment = useMutation({
+        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+            const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.edit.id}/`, {
+                method: 'PATCH',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "id": e.target.edit.id,
+                    "content": e.target.content.value,
+                })
             })
-        })
-        return response.json()
-    };
-    const { mutate: replyComment } = useMutation(createComment, {
-        onSuccess: ((data, e) => {
-            createReply(data, e)
-        })
+            return response.json()
+        }
     })
-    const { mutate: z } = useMutation(createComment, {
-        onSuccess: ((data) => {
-            console.log(data)
-        })
+
+    const handleEditComment = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        EditComment.mutate(e)
+        handleEdit(e)
+    }
+
+    const DeleteComment = useMutation({
+        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+            const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.id}/`, {
+                method: 'DELETE',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+            })
+            return response.json()
+        }
     })
+
+    const handleDeleteComment = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (e.currentTarget.name === "deleteReply") {
+            handleDeleteReply(e)
+        } else {
+            handleDeleteParent(e)
+        }
+        DeleteComment.mutate(e)
+    }
+
     return (
+        isDisplaying &&
         <>
             {isDeletetMode &&
                 <AppLayer>
@@ -151,7 +212,11 @@ const Comment: React.FC<Props> = (props) => {
                         </AppParagraph>
                         <CommentModalForm>
                             <AppButton large cancel onClick={setIsDeleteMode}>No, cancel</AppButton>
-                            <AppButton large delete onClick={handleDelete} id={props.id}>Yes, delete</AppButton>
+                            {props.parentId ?
+                                <AppButton large delete onClick={handleDeleteComment} name="deleteReply" id={props.id}>Yes, delete</AppButton>
+                                :
+                                <AppButton large delete onClick={handleDeleteComment} name="deleteComment" id={props.id}>Yes, delete</AppButton>
+                            }
                         </CommentModalForm>
                     </CommentModalContainer>
                 </AppLayer>
@@ -196,13 +261,13 @@ const Comment: React.FC<Props> = (props) => {
                         </CommentActionList>
                     </CommentHeader>
                     {isEditMode ?
-                        <CommentEditForm onSubmit={handleEdit}>
+                        <CommentEditForm onSubmit={handleEditComment}>
                             <AddCommentTextarea
                                 name='content'
                                 defaultValue={content}
                             >
                             </AddCommentTextarea>
-                            <AppButton>Update</AppButton>
+                            <AppButton id={props.id} name="edit">Update</AppButton>
                         </CommentEditForm>
                         :
                         <AppParagraph>
@@ -218,11 +283,30 @@ const Comment: React.FC<Props> = (props) => {
                     srcPrimary={props.currentUser.image.webp}
                     srcDefault={props.currentUser.image.png}
                     buttonText="Reply"
-                    createComment={replyComment}
+                    handleSubmit={handleAddReply}
+                    buttonName="reply"
+                    parentId={props.parentId}
+                    parentUsername={props.username}
                 />
             }
+
         </>
     )
 }
 
 export default Comment
+
+/*props.setComments((current: any) => current.filter((comment: any) => comment.id != e.target.id))*/
+/*
+const childComment = props.comments.find((comment: any) => comment.id == e.target.id)
+const parenComment = props.comments.find((comment: any) => comment.id == childComment?.parent_id)
+const UpdatedReplies = parenComment?.replies.filter((comment: any) => comment.id != childComment?.id)
+props.setComments(props.comments.map(comment => {
+    if (comment.id == childComment?.parent_id) {
+        return { ...comment, replies: UpdatedReplies };
+    } else {
+        return comment;
+    }
+}))
+setIsDeleteMode()
+*/

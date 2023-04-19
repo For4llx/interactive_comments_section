@@ -4,16 +4,19 @@ import AddCommentPicture from '../components/AddCommentPicture';
 import AddCommentContainer from "../components/AddCommentContainer";
 import AddCommentForm from "../components/AddCommentForm";
 
-interface Props {
-    id: any
+interface IProps {
+    id: number,
     username: string,
     srcPrimary: string,
     srcDefault: string,
     buttonText: string,
-    createComment: any
+    handleSubmit: any
+    buttonName: string
+    parentId?: number
+    parentUsername?: string
 }
 
-const AddComment: React.FC<Props> = (props) => {
+const AddComment: React.FC<IProps> = (props) => {
     return (
         <AddCommentContainer>
             <AddCommentPicture
@@ -21,9 +24,18 @@ const AddComment: React.FC<Props> = (props) => {
                 srcPrimary={props.srcPrimary}
                 srcDefault={props.srcDefault}
             />
-            <AddCommentForm onSubmit={props.createComment}>
-                <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
-                <AppButton id={props.id} >{props.buttonText}</AppButton>
+            <AddCommentForm onSubmit={props.handleSubmit}>
+                {props.parentId ?
+                    <>
+                        <AddCommentTextarea name='content' placeholder="Add a comment…" defaultValue={`@${props.parentUsername} `}></AddCommentTextarea>
+                        <AppButton id={props.parentId} name={props.buttonName}>{props.buttonText}</AppButton>
+                    </>
+                    :
+                    <>
+                        <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
+                        <AppButton id={props.id} name={props.buttonName}>{props.buttonText}</AppButton>
+                    </>
+                }
             </AddCommentForm>
         </AddCommentContainer>
     )

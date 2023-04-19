@@ -4,6 +4,7 @@ from authentification.models import User
 
 
 class Comment(models.Model):
+    parent_id = models.IntegerField(blank=True, null=True)
     content = models.TextField()
     createdAt = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField(default=0)
