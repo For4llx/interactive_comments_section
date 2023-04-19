@@ -10,31 +10,6 @@ class CommentViewset(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
-    """
-    def create(self, request):
-        current_user = User.objects.get(id=request.data["user"]["id"])
-        if request.data["reply"]:
-            comment_data = {
-                "user": current_user,
-                "content": request.data["content"],
-                "reply": request.data["reply"],
-            }
-        comment_data = {
-            "user": current_user,
-            "content": request.data["content"],
-        }
-        new_comment = Comment(**comment_data)
-        new_comment.save()
-        if request.data["reply"]:
-            comment_repleid_to = Comment.objects.get(id=request.data["repliedTo"])
-            comment_repleid_to.replies.add(new_comment)
-            comment_repleid_to.save()
-        print("==============================")
-        serializer = self.get_serializer(new_comment, data=comment_data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
-    """
-
     def create(self, request):
         comment_data = request.data
         if not comment_data["reply"]:
@@ -54,24 +29,11 @@ class CommentViewset(ModelViewSet):
             serializer = CommentSerializer(new_reply)
             return Response(serializer.data)
 
-    def update(self, request, pk=None):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+    def partial_update(self, request, pk=None):
+        comment_instance = self.get_object()
+        serializer = self.get_serializer(
+            comment_instance, data=request.data, partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-
-    def partial_update(self, request, pk=None):
-        comment_instance = self.get_object()
-        reply_instance = Comment.objects.get(id=request.data["replyId"])
-        comment_instance.replies.add(reply_instance)
-        serializer = CommentSerializer(comment_instance)
-        return Response(serializer.data)
-
-    def destroy(self, request, pk=None):
-        instance = self.get_object()
-        instance_id = instance.id
-        print(instance_id)
-        self.perform_destroy(instance)
-
-        return Response(instance_id)
