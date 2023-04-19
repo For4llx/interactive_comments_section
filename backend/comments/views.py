@@ -37,12 +37,22 @@ class CommentViewset(ModelViewSet):
 
     def create(self, request):
         comment_data = request.data
-        current_user = User.objects.get(id=comment_data["user"]["id"])
-        comment_data["user"] = current_user
-        new_comment = Comment.objects.create(**comment_data)
-        new_comment.save()
-        serializer = CommentSerializer(new_comment)
-        return Response(serializer.data)
+        if not comment_data["reply"]:
+            current_user = User.objects.get(id=comment_data["user"]["id"])
+            comment_data["user"] = current_user
+            new_comment = Comment.objects.create(**comment_data)
+            new_comment.save()
+            serializer = CommentSerializer(new_comment)
+            return Response(serializer.data)
+        if comment_data["reply"]:
+            current_user = User.objects.get(id=comment_data["user"]["id"])
+            comment_data["user"] = current_user
+            comment_instance = Comment.objects.get(id=comment_data["parent_id"])
+            new_reply = Comment.objects.create(**comment_data)
+            new_reply.save()
+            comment_instance.replies.add(new_reply)
+            serializer = CommentSerializer(new_reply)
+            return Response(serializer.data)
 
     def update(self, request, pk=None):
         instance = self.get_object()
@@ -52,10 +62,8 @@ class CommentViewset(ModelViewSet):
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
-        print("=========================================")
-        print(request.data)
         comment_instance = self.get_object()
-        reply_instance = Comment.objects.get(id=request.data["reply_id"])
+        reply_instance = Comment.objects.get(id=request.data["replyId"])
         comment_instance.replies.add(reply_instance)
         serializer = CommentSerializer(comment_instance)
         return Response(serializer.data)

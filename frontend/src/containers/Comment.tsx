@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
-import { useQuery, useMutation } from "react-query";
-
+import { FormEventHandler, useCallback, useState } from 'react';
+import { useQuery, useMutation, UseMutationResult } from "react-query";
 import AppLayer from '../components/AppLayer';
 import AppButton from '../components/AppButton'
 import AppHeading from "../components/AppHeading"
@@ -52,6 +51,7 @@ interface Props {
     commentUserId: number,
     comments: Array<IComment>
     setComments: Function
+    handleSubmit: Function
 }
 
 const useToggle = (initialState: boolean = false): [boolean, any] => {
@@ -95,50 +95,30 @@ const Comment: React.FC<Props> = (props) => {
         setIsReplyMode()
     };
 
-    const createReply = async (reply: any, e: any) => {
-        const response = await fetch(`http://127.0.0.1:8000/comments/218/`, {
-            method: 'PATCH',
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "reply_id": reply.id,
+    const addComment = useMutation({
+        mutationFn: async () => {
+            const response = await fetch('http://127.0.0.1:8000/comments/', {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    user: props.currentUser,
+                    content: "test",
+                    reply: false
+                })
             })
-        })
-        const comment = response.json()
-        props.setComments([...props.comments, comment])
-        console.log(props.comments)
-        handleReply(e)
-        return comment;
+            return response.json()
+        }
+    })
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        addComment.mutate()
     }
 
-    const createComment = async (e: any) => {
-        e.preventDefault()
-        const response = await fetch('http://127.0.0.1:8000/comments/', {
-            method: 'POST',
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "user": props.currentUser,
-                "content": "content",
-                "reply": true,
-            })
-        })
-        return response.json()
-    };
-    const { mutate: replyComment } = useMutation(createComment, {
-        onSuccess: ((data, e) => {
-            createReply(data, e)
-        })
-    })
-    const { mutate: z } = useMutation(createComment, {
-        onSuccess: ((data) => {
-            console.log(data)
-        })
-    })
+
     return (
         <>
             {isDeletetMode &&
@@ -218,11 +198,60 @@ const Comment: React.FC<Props> = (props) => {
                     srcPrimary={props.currentUser.image.webp}
                     srcDefault={props.currentUser.image.png}
                     buttonText="Reply"
-                    createComment={replyComment}
+                    handleSubmit={props.handleSubmit}
+                    buttonName="reply"
                 />
             }
         </>
+
     )
 }
 
 export default Comment
+
+/*
+     const createReply = async (reply: any, e: any) => {
+         const response = await fetch(`http://127.0.0.1:8000/comments/218/`, {
+             method: 'PATCH',
+             headers: {
+                 "Accept": "application/json",
+                 "Content-Type": "application/json"
+             },
+             body: JSON.stringify({
+                 "reply_id": reply.id,
+             })
+         })
+         const comment = response.json()
+         props.setComments([...props.comments, comment])
+         console.log(props.comments)
+         handleReply(e)
+         return comment;
+     }
+ 
+     const createComment = async (e: any) => {
+         e.preventDefault()
+         const response = await fetch('http://127.0.0.1:8000/comments/', {
+             method: 'POST',
+             headers: {
+                 "Accept": "application/json",
+                 "Content-Type": "application/json"
+             },
+             body: JSON.stringify({
+                 "user": props.currentUser,
+                 "content": "content",
+                 "reply": true,
+             })
+         })
+         return response.json()
+     };
+     const { mutate: replyComment } = useMutation(createComment, {
+         onSuccess: ((data, e) => {
+             createReply(data, e)
+         })
+     })
+     const { mutate: z } = useMutation(createComment, {
+         onSuccess: ((data) => {
+             console.log(data)
+         })
+     })
+ */
