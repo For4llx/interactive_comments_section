@@ -12,6 +12,8 @@ interface IProps {
     buttonText: string,
     handleSubmit: any
     buttonName: string
+    parentId?: number
+    parentUsername?: string
 }
 
 const AddComment: React.FC<IProps> = (props) => {
@@ -23,8 +25,17 @@ const AddComment: React.FC<IProps> = (props) => {
                 srcDefault={props.srcDefault}
             />
             <AddCommentForm onSubmit={props.handleSubmit}>
-                <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
-                <AppButton id={props.id} name={props.buttonName}>{props.buttonText}</AppButton>
+                {props.parentId ?
+                    <>
+                        <AddCommentTextarea name='content' placeholder="Add a comment…" defaultValue={`@${props.parentUsername} `}></AddCommentTextarea>
+                        <AppButton id={props.parentId} name={props.buttonName}>{props.buttonText}</AppButton>
+                    </>
+                    :
+                    <>
+                        <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
+                        <AppButton id={props.id} name={props.buttonName}>{props.buttonText}</AppButton>
+                    </>
+                }
             </AddCommentForm>
         </AddCommentContainer>
     )

@@ -37,6 +37,7 @@ interface IComment {
     score: number;
     reply: boolean;
     replies: Array<IComment>;
+    parentid?: number
 }
 
 interface Props {
@@ -51,7 +52,8 @@ interface Props {
     commentUserId: number,
     comments: Array<IComment>
     setComments: Function
-    handleSubmit: Function
+    parentId?: number
+    parentUsername?: string
 }
 
 const useToggle = (initialState: boolean = false): [boolean, any] => {
@@ -82,7 +84,6 @@ const Comment: React.FC<Props> = (props) => {
         props.setComments((current: any) => current.filter((comment: any) => comment.id != e.target.id))
     };
 
-
     const handleReply = (e: any): void => {
         e.preventDefault()
         props.setComments(props.comments.map(comment => {
@@ -95,29 +96,55 @@ const Comment: React.FC<Props> = (props) => {
         setIsReplyMode()
     };
 
-    const addComment = useMutation({
-        mutationFn: async () => {
+    const addReply = useMutation({
+        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+            let body = ""
+            if (e.target.send) {
+                body = JSON.stringify({
+                    user: props.currentUser,
+                    content: e.target.content.value,
+                    reply: false
+                })
+            }
+            if (e.target.reply) {
+                body = JSON.stringify({
+                    user: props.currentUser,
+                    content: e.target.content.value,
+                    reply: true,
+                    parent_id: e.target.reply.id,
+                })
+            }
             const response = await fetch('http://127.0.0.1:8000/comments/', {
                 method: 'POST',
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    user: props.currentUser,
-                    content: "test",
-                    reply: false
-                })
+                body: body
             })
             return response.json()
+        },
+        onSuccess: (comment_instance) => {
+            if (!comment_instance.reply) {
+                props.setComments([...props.comments, comment_instance])
+            } else {
+                const updatedComments = props.comments.map(comment => {
+                    if (comment.id === comment_instance.parent_id) {
+                        console.log("gfzregfdscxvdsvc ")
+                        return { ...comment, replies: [...comment.replies, comment_instance] }
+                    }
+                    return comment;
+                });
+                props.setComments(updatedComments)
+            }
         }
     })
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleAddReply = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        addComment.mutate()
+        addReply.mutate(e)
+        handleReply(e)
     }
-
 
     return (
         <>
@@ -198,8 +225,10 @@ const Comment: React.FC<Props> = (props) => {
                     srcPrimary={props.currentUser.image.webp}
                     srcDefault={props.currentUser.image.png}
                     buttonText="Reply"
-                    handleSubmit={props.handleSubmit}
+                    handleSubmit={handleAddReply}
                     buttonName="reply"
+                    parentId={props.parentId}
+                    parentUsername={props.username}
                 />
             }
         </>

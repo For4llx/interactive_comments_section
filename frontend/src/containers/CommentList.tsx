@@ -18,6 +18,7 @@ interface IComment {
     score: number;
     reply: boolean;
     replies: Array<IComment>;
+    parent_id?: number
 }
 
 interface ICommentList {
@@ -25,7 +26,6 @@ interface ICommentList {
     setComments: Function,
     currentUser: any,
     setcurrentUser: Function,
-    handleSubmit: Function
 }
 
 const CommentList: React.FC<ICommentList> = (props) => {
@@ -46,7 +46,6 @@ const CommentList: React.FC<ICommentList> = (props) => {
                         counterValue={comment.score}
                         comments={props.comments}
                         setComments={props.setComments}
-                        handleSubmit={props.handleSubmit}
                     />
                     <CommentReplyList>
                         {comment.replies.map(reply => (
@@ -63,7 +62,7 @@ const CommentList: React.FC<ICommentList> = (props) => {
                                     counterValue={reply.score}
                                     comments={props.comments}
                                     setComments={props.setComments}
-                                    handleSubmit={props.handleSubmit}
+                                    parentId={reply.parent_id}
                                 />
                             </li>
                         ))}
