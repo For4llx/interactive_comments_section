@@ -5,7 +5,7 @@ export default styled.article`
     display: flex;
     align-items: top;
     gap: 1.5rem;
-    background-color: ${props => props.theme.white};
+    background-color: ${props => props.theme.colors.white};
     border-radius: 8px;
     width: 100%;
 `

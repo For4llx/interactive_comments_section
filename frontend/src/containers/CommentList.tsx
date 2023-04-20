@@ -3,31 +3,6 @@ import Comment from "./Comment"
 import AddComment from "./AddComment";
 import { useState } from "react"
 
-interface IComment {
-    id: number;
-    user: {
-        id: number
-        username: string;
-        image: {
-            webp: string;
-            png: string;
-        };
-    };
-    createdAt: string;
-    content: string;
-    score: number;
-    reply: boolean;
-    replies: Array<IComment>;
-    parent_id?: number
-}
-
-interface ICommentList {
-    comments: Array<IComment>,
-    setComments: Function,
-    currentUser: any,
-    setcurrentUser: Function,
-}
-
 const CommentList: React.FC<ICommentList> = (props) => {
     return (
         <ul>
@@ -35,6 +10,7 @@ const CommentList: React.FC<ICommentList> = (props) => {
                 !comment.reply &&
                 <li key={comment.id}>
                     <Comment
+                        comment={comment}
                         id={comment.id}
                         username={comment.user.username}
                         currentUser={props.currentUser}
@@ -51,6 +27,7 @@ const CommentList: React.FC<ICommentList> = (props) => {
                         {comment.replies.map(reply => (
                             <li key={reply.id}>
                                 <Comment
+                                    comment={comment}
                                     id={reply.id}
                                     username={reply.user.username}
                                     currentUser={props.currentUser}

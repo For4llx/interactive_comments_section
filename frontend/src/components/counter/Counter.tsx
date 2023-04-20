@@ -1,13 +1,38 @@
 import { useState } from "react"
-import { useQuery, useMutation } from "react-query";
-import CounterContainer from "../components/CounterContainer"
-import CounterButton from "../components/CounterButton"
-import CounterPlusIcon from "../components/CounterPlusIcon"
-import CounterMinusIcon from "../components/CounterMinusIcon"
-import CounterValue from "../components/CounterValue"
+import CounterButton from "./CounterButton";
+import CounterContainer from "./CounterContainer";
+import CounterMinusIcon from "./CounterIconMinus";
+import CounterPlusIcon from "./CounterIconPlus";
+import CounterValue from "./CounterValue";
 
-const Counter: React.FC<Props> = ({ counterValue, comment, currentUser }) => {
-    const [count, setCount] = useState<number>(counterValue);
+interface IUser {
+    id: number
+    username: string;
+    image: {
+        webp: string;
+        png: string;
+    }
+}
+
+interface IComment {
+    id: number
+    user: IUser
+    parentId: number
+    content: string
+    score: number
+    reply: boolean
+    user_liked: Array<IUser>
+    user_disliked: Array<IUser>
+    replies: Array<IComment>
+}
+
+interface ICounter {
+    comment: IComment
+    currentUser: IUser
+}
+
+const Counter: React.FC<ICounter> = ({ comment, currentUser }) => {
+    const [count, setCount] = useState<number>(comment.score);
     const [liked, setLiked] = useState<boolean>(comment.user_liked.includes(currentUser));
     const [disliked, setDisliked] = useState<boolean>(comment.user_disliked.includes(currentUser));
 

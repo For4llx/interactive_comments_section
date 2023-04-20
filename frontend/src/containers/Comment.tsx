@@ -22,40 +22,6 @@ import AddCommentTextarea from "../components/AddCommentTextarea"
 import CommentEditForm from '../components/CommentEditForm';
 import CommentModalForm from '../components/CommentModalForm';
 
-interface IComment {
-    id: number;
-    user: {
-        id: number
-        username: string;
-        image: {
-            webp: string;
-            png: string;
-        };
-    };
-    createdAt: string;
-    content: string;
-    score: number;
-    reply: boolean;
-    replies: Array<IComment>;
-    parentid?: number
-}
-
-interface Props {
-    id: number,
-    username: string,
-    createdAt: string,
-    content: string,
-    counterValue: number,
-    pictureSrcPrimary: string,
-    pictureSrcDefault: string,
-    currentUser: any,
-    commentUserId: number,
-    comments: Array<IComment>
-    setComments: Function
-    parentId?: number
-    parentUsername?: string
-}
-
 const useToggle = (initialState: boolean = false): [boolean, any] => {
     // Initialize the state
     const [state, setState] = useState<boolean>(initialState);
@@ -68,11 +34,12 @@ const useToggle = (initialState: boolean = false): [boolean, any] => {
 }
 
 const Comment: React.FC<Props> = (props) => {
-    const [isDisplaying, setIsDisplaying] = useToggle(true);
-    const [isReplyMode, setIsReplyMode] = useToggle();
-    const [isEditMode, setIsEditMode] = useToggle();
-    const [isDeletetMode, setIsDeleteMode] = useToggle();
+    const [isDeleted, setIsisDeleted] = useToggle(false);
+    const [isReplyMode, setIsReplyMode] = useToggle(false);
+    const [isEditMode, setIsEditMode] = useToggle(false);
+    const [isDeleteMode, setIsDeleteMode] = useToggle(false);
     const [content, setContent] = useState(props.content);
+
 
     const handleEdit = (e: React.FormEvent<HTMLFormElement>): void => {
         e.preventDefault()
@@ -82,13 +49,13 @@ const Comment: React.FC<Props> = (props) => {
 
     const handleDeleteParent = (e: any): void => {
         e.preventDefault()
-        setIsDisplaying()
+        setIsisDeleted()
         setIsDeleteMode()
     };
 
     const handleDeleteReply = (e: any): void => {
         e.preventDefault()
-        setIsDisplaying()
+        setIsisDeleted()
         setIsDeleteMode()
     };
 
@@ -200,9 +167,9 @@ const Comment: React.FC<Props> = (props) => {
     }
 
     return (
-        isDisplaying &&
+        isDeleted &&
         <>
-            {isDeletetMode &&
+            {isDeleteMode &&
                 <AppLayer>
                     <CommentModalContainer>
                         <AppHeading large>Delete comment</AppHeading>
@@ -289,7 +256,6 @@ const Comment: React.FC<Props> = (props) => {
                     parentUsername={props.username}
                 />
             }
-
         </>
     )
 }
