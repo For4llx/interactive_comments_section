@@ -1,6 +1,10 @@
 import styled from 'styled-components'
 
-export default styled.button`
+interface IProps {
+    id?: number
+}
+
+export default styled.button<IProps>`
     cursor: pointer;
     display: flex;
     align-items: center;

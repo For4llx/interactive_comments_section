@@ -1,37 +1,81 @@
-import CommentList from '../containers/CommentList';
-import AppContainer from '../components/AppContainer';
-import { useState } from "react"
-import { useQuery, useMutation } from "react-query";
-import AddComment from '../containers/AddComment';
+import Comment from '../components/comment';
+import CommentList from '../components/commentList';
+import AddComment from '../components/addComment';
+import { useQuery } from 'react-query';
+import { useState } from 'react';
 
-interface IComment {
-    id: number;
-    user: {
-        id: number
-        username: string;
-        image: {
-            webp: string;
-            png: string;
-        };
-    };
-    createdAt: string;
-    content: string;
-    score: number;
-    reply: boolean;
-    replies: Array<IComment>;
-    parentId?: number
+async function fetchCurrentUser() {
+    const response = await fetch("http://127.0.0.1:8000/users/5");
+    return response.json();
+}
+
+async function fetchComments() {
+    const response = await fetch("http://127.0.0.1:8000/comments/");
+    return response.json();
 }
 
 interface IUser {
-    id: number,
+    id: number
+    username: string;
     image: {
-        png: string,
-        webp: string,
-    },
-    username: string,
+        webp: string;
+        png: string;
+    }
+}
+
+interface IComment {
+    id: number
+    user: IUser
+    parentId: number
+    content: string
+    score: number
+    reply: boolean
+    user_liked: Array<IUser>
+    user_disliked: Array<IUser>
+    replies: Array<IComment>
 }
 
 function CommentPage() {
+    const [comments, setComments] = useState<IComment[]>([]);
+    const [currentUser, setCurrentUser] = useState<IUser>({
+        id: 0,
+        username: "",
+        image: {
+            webp: "",
+            png: "",
+        }
+    })
+    useQuery('currentUser', fetchCurrentUser, { onSuccess: (data) => { setCurrentUser(data) } });
+    useQuery('comments', fetchComments, { onSuccess: (data) => { setComments(data) } });
+
+    return (
+        <>
+            <CommentList
+                comments={comments}
+                currentUser={currentUser}
+            />
+            <AddComment
+                currentUser={currentUser}
+                buttonText="Send"
+            />
+        </>
+    )
+}
+
+export default CommentPage
+
+
+/*
+            <CommentList/>
+            <AddComment
+                id={currentUser.id}
+                username={currentUser.username}
+                srcPrimary={currentUser.image.webp}
+                srcDefault={currentUser.image.png}
+                buttonText="Send"
+                handleSubmit={handleAddComment}
+                buttonName="send"
+            />
     const [comments, setComments] = useState<IComment[]>([]);
     const [currentUser, setCurrentUser] = useState<IUser>({
         id: 0,
@@ -43,10 +87,6 @@ function CommentPage() {
     }
     );
 
-    async function fetchComments() {
-        const response = await fetch("http://127.0.0.1:8000/comments/");
-        return response.json();
-    }
 
     async function fetchCurrentUser() {
         const response = await fetch("http://127.0.0.1:8000/users/5");
@@ -80,25 +120,4 @@ function CommentPage() {
         e.preventDefault()
         addComment.mutate(e)
     }
-    return (
-        <AppContainer>
-            <CommentList
-                currentUser={currentUser}
-                setcurrentUser={setCurrentUser}
-                comments={comments}
-                setComments={setComments}
-            />
-            <AddComment
-                id={currentUser.id}
-                username={currentUser.username}
-                srcPrimary={currentUser.image.webp}
-                srcDefault={currentUser.image.png}
-                buttonText="Send"
-                handleSubmit={handleAddComment}
-                buttonName="send"
-            />
-        </AppContainer>
-    )
-}
-
-export default CommentPage
+*/

@@ -17,11 +17,11 @@ export default styled.button<Props>`
     font-size: ${props => props.theme.fontSizeParagraph};
     min-width: ${props => props.large ? "161px" : "104px"};
     min-height: 48px;
-    color: ${props => props.theme.white};
+    color: ${props => props.theme.colors.white};
     border-radius: 8px;
-    background-color: ${props => props.delete ? props.theme.softRed : props.cancel ? props.theme.grayishBlue : props.theme.moderateBlue};
+    background-color: ${props => props.delete ? props.theme.colors.softRed : props.cancel ? props.theme.colors.grayishBlue : props.theme.colors.moderateBlue};
 
     &:hover {
-        background-color: ${props => props.delete ? props.theme.paleRed : props.cancel ? props.theme.lightGrayishBlue : props.theme.lightGrayishBlue};
+        background-color: ${props => props.delete ? props.theme.colors.paleRed : props.cancel ? props.theme.colors.lightGrayishBlue : props.theme.colors.lightGrayishBlue};
     }
 `
