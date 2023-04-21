@@ -1,6 +1,9 @@
 import AppContainer from '../app/AppContainer';
-import CommentListReply from "./CommentListReply";
+import CommentReplyList from "./CommentReplyList";
+import CommentListItem from "./CommentListItem";
 import Comment from "../comment"
+import CommentListContainer from './CommentListContainer';
+import CommentReplyListItem from './CommentReplyListItem';
 
 interface IUser {
     id: number
@@ -26,31 +29,41 @@ interface IComment {
 interface ICommentList {
     comments: Array<IComment>
     currentUser: IUser
+    setComments: Function
 }
 
-const CommentList: React.FC<ICommentList> = ({ comments, currentUser }) => {
+const CommentList: React.FC<ICommentList> = ({ comments, setComments, currentUser }) => {
     return (
-        <AppContainer>
+        <CommentListContainer>
             {comments.map((comment) => (
                 !comment.reply &&
-                <li key={comment.id}>
+                <CommentListItem key={comment.id}>
                     <Comment
+                        comments={comments}
+                        setComments={setComments}
                         comment={comment}
                         currentUser={currentUser}
                     />
-                    <CommentListReply>
-                        {comment.replies.map(reply => (
-                            <li key={reply.id}>
-                                <Comment
-                                    comment={reply}
-                                    currentUser={currentUser}
-                                />
-                            </li>
-                        ))}
-                    </CommentListReply>
-                </li>
+                    {comment.replies.length > 0 &&
+                        <>
+                            <CommentReplyList>
+                                {comment.replies.map(reply => (
+                                    <CommentReplyListItem key={reply.id}>
+                                        <Comment
+                                            comment={reply}
+                                            setComments={setComments}
+                                            comments={comments}
+                                            currentUser={currentUser}
+                                        />
+                                    </CommentReplyListItem>
+                                ))}
+                            </CommentReplyList>
+                        </>
+                    }
+                </CommentListItem>
+
             ))}
-        </AppContainer>
+        </CommentListContainer>
     )
 }
 

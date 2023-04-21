@@ -1,18 +1,8 @@
-import Comment from '../components/comment';
 import CommentList from '../components/commentList';
 import AddComment from '../components/addComment';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import { useState } from 'react';
-
-async function fetchCurrentUser() {
-    const response = await fetch("http://127.0.0.1:8000/users/5");
-    return response.json();
-}
-
-async function fetchComments() {
-    const response = await fetch("http://127.0.0.1:8000/comments/");
-    return response.json();
-}
+import LayoutPageComment from '../components/utils/LayoutPageComment';
 
 interface IUser {
     id: number
@@ -35,6 +25,19 @@ interface IComment {
     replies: Array<IComment>
 }
 
+async function fetchCurrentUser() {
+    const response = await fetch("http://127.0.0.1:8000/users/5");
+    return response.json();
+}
+
+async function fetchComments() {
+    const response = await fetch("http://127.0.0.1:8000/comments/");
+    return response.json();
+}
+
+
+
+
 function CommentPage() {
     const [comments, setComments] = useState<IComment[]>([]);
     const [currentUser, setCurrentUser] = useState<IUser>({
@@ -45,57 +48,6 @@ function CommentPage() {
             png: "",
         }
     })
-    useQuery('currentUser', fetchCurrentUser, { onSuccess: (data) => { setCurrentUser(data) } });
-    useQuery('comments', fetchComments, { onSuccess: (data) => { setComments(data) } });
-
-    return (
-        <>
-            <CommentList
-                comments={comments}
-                currentUser={currentUser}
-            />
-            <AddComment
-                currentUser={currentUser}
-                buttonText="Send"
-            />
-        </>
-    )
-}
-
-export default CommentPage
-
-
-/*
-            <CommentList/>
-            <AddComment
-                id={currentUser.id}
-                username={currentUser.username}
-                srcPrimary={currentUser.image.webp}
-                srcDefault={currentUser.image.png}
-                buttonText="Send"
-                handleSubmit={handleAddComment}
-                buttonName="send"
-            />
-    const [comments, setComments] = useState<IComment[]>([]);
-    const [currentUser, setCurrentUser] = useState<IUser>({
-        id: 0,
-        image: {
-            png: "",
-            webp: "",
-        },
-        username: "",
-    }
-    );
-
-
-    async function fetchCurrentUser() {
-        const response = await fetch("http://127.0.0.1:8000/users/5");
-        return response.json();
-    }
-
-
-    useQuery('comments', fetchComments, { onSuccess: (data) => { setComments(data) } });
-    useQuery('currentUser', fetchCurrentUser, { onSuccess: (data) => { setCurrentUser(data) } });
 
     const addComment = useMutation({
         mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
@@ -120,4 +72,30 @@ export default CommentPage
         e.preventDefault()
         addComment.mutate(e)
     }
+
+    useQuery('currentUser', fetchCurrentUser, { onSuccess: (data) => { setCurrentUser(data) } });
+    useQuery('comments', fetchComments, { onSuccess: (data) => { setComments(data) } });
+
+    return (
+        <LayoutPageComment>
+            <CommentList
+                comments={comments}
+                setComments={setComments}
+                currentUser={currentUser}
+            />
+            <AddComment
+                currentUser={currentUser}
+                buttonText="Send"
+                isReplyMode={false}
+                handleAddComment={handleAddComment}
+            />
+        </LayoutPageComment>
+    )
+}
+
+export default CommentPage
+
+
+/*
+
 */
