@@ -9,9 +9,10 @@ interface IModal {
     setIsDeleteMode: Function
     parentId: number
     id: number
+    handleDeleteComment: Function
 }
 
-const Modal: React.FC<IModal> = ({ setIsDeleteMode, parentId, id }) => {
+const Modal: React.FC<IModal> = ({ setIsDeleteMode, parentId, id, handleDeleteComment }) => {
     return (
         <AppLayer>
             <ModalContainer>
@@ -23,9 +24,9 @@ const Modal: React.FC<IModal> = ({ setIsDeleteMode, parentId, id }) => {
                 <ModalForm>
                     <AppButton large cancel onClick={setIsDeleteMode}>No, cancel</AppButton>
                     {parentId ?
-                        <AppButton large delete name="deleteReply" id={id}>Yes, delete</AppButton>
+                        <AppButton large delete name="deleteReply" onClick={handleDeleteComment} id={id}>Yes, delete</AppButton>
                         :
-                        <AppButton large delete name="deleteComment" id={id}>Yes, delete</AppButton>
+                        <AppButton large delete name="deleteComment" onClick={handleDeleteComment} id={id}>Yes, delete</AppButton>
                     }
                 </ModalForm>
             </ModalContainer>

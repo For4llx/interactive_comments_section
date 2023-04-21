@@ -6,7 +6,7 @@ export default styled.article`
     flex-direction: column;
     align-items: top;
     gap: 1.5rem;
-    background-color: ${props => props.theme.white};
+    background-color: ${props => props.theme.colors.white};
     border-radius: 8px;
     width: 400px;
 `

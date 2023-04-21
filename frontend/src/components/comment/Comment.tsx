@@ -19,6 +19,7 @@ import CommentDeleteIcon from "./CommentDeleteIcon"
 import CommentReplyIcon from "./CommentReplyIcon"
 import CommentEditForm from "./CommentEditForm"
 import useToggle from "../utils/useToogle"
+import { useMutation } from "react-query"
 
 interface IUser {
     id: number
@@ -42,15 +43,144 @@ interface IComment {
 }
 
 interface ICommentItem {
+    comments: Array<IComment>
+    setComments: Function
     comment: IComment
     currentUser: IUser
 }
 
-const Comment: React.FC<ICommentItem> = ({ comment, currentUser }) => {
+const Comment: React.FC<ICommentItem> = ({ comment, comments, setComments, currentUser }) => {
     const [isDeleted, setIsisDeleted] = useToggle(false);
     const [isReplyMode, setIsReplyMode] = useToggle(false);
     const [isEditMode, setIsEditMode] = useToggle(false);
     const [isDeleteMode, setIsDeleteMode] = useToggle(false);
+    const [content, setContent] = useState(comment.content)
+
+    const handleEdit = (e: React.FormEvent<HTMLFormElement>): void => {
+        e.preventDefault()
+        setContent(e.currentTarget.content.value)
+        setIsEditMode()
+    }
+
+    const handleDeleteParent = (e: any): void => {
+        e.preventDefault()
+        setIsisDeleted()
+        setIsDeleteMode()
+    };
+
+    const handleDeleteReply = (e: any): void => {
+        e.preventDefault()
+        setIsisDeleted()
+        setIsDeleteMode()
+    };
+
+    const handleReply = (e: any): void => {
+        e.preventDefault()
+        setComments(comments.map(comment => {
+            if (comment.id === Number(e.target.id)) {
+                return { ...comment, replies: [...comment.replies, comment] };
+            } else {
+                return comment;
+            }
+        }))
+        setIsReplyMode()
+    };
+
+    const addReply = useMutation({
+        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+            let body = ""
+            if (e.target.send) {
+                body = JSON.stringify({
+                    user: currentUser,
+                    content: e.target.content.value,
+                    reply: false
+                })
+            }
+            if (e.target.reply) {
+                body = JSON.stringify({
+                    user: currentUser,
+                    content: e.target.content.value,
+                    reply: true,
+                    parent_id: e.target.reply.id,
+                })
+            }
+            const response = await fetch('http://127.0.0.1:8000/comments/', {
+                method: 'POST',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: body
+            })
+            return response.json()
+        },
+        onSuccess: (comment_instance) => {
+            if (!comment_instance.reply) {
+                setComments([...comments, comment_instance])
+            } else {
+                const updatedComments = comments.map(comment => {
+                    if (comment.id === comment_instance.parent_id) {
+                        return { ...comment, replies: [...comment.replies, comment_instance] }
+                    }
+                    return comment;
+                });
+                setComments(updatedComments)
+            }
+        }
+    })
+
+    const handleAddReply = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        addReply.mutate(e)
+        handleReply(e)
+    }
+
+    const EditComment = useMutation({
+        mutationFn: (async (e: React.FormEvent<HTMLFormElement>) => {
+            const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.edit.id}/`, {
+                method: 'PATCH',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "id": e.target.edit.id,
+                    "content": e.target.content.value,
+                })
+            })
+            return response.json()
+        })
+    })
+
+    const handleEditComment = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        EditComment.mutate(e)
+        handleEdit(e)
+    }
+
+    const DeleteComment = useMutation({
+        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+            const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.id}/`, {
+                method: 'DELETE',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+            })
+            return response.json()
+        }
+    })
+
+    const handleDeleteComment = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (e.currentTarget.name === "deleteReply") {
+            handleDeleteReply(e)
+        } else {
+            handleDeleteParent(e)
+        }
+        DeleteComment.mutate(e)
+    }
+
 
     return (
         <>
@@ -61,6 +191,7 @@ const Comment: React.FC<ICommentItem> = ({ comment, currentUser }) => {
                             id={comment.id}
                             parentId={comment.parentId}
                             setIsDeleteMode={setIsDeleteMode}
+                            handleDeleteComment={handleDeleteComment}
                         />
                     }
                     <CommentContainer>
@@ -104,17 +235,17 @@ const Comment: React.FC<ICommentItem> = ({ comment, currentUser }) => {
                                 </CommentActionList>
                             </CommentHeader>
                             {isEditMode ?
-                                <CommentEditForm>
+                                <CommentEditForm onSubmit={handleEditComment}>
                                     <AppTextarea
                                         name='content'
-                                        defaultValue={comment.content}
+                                        defaultValue={content}
                                     >
                                     </AppTextarea>
                                     <AppButton id={comment.id} name="edit">Update</AppButton>
                                 </CommentEditForm>
                                 :
                                 <AppParagraph>
-                                    {comment.content}
+                                    {content}
                                 </AppParagraph>
                             }
                         </CommentContent>
@@ -124,6 +255,10 @@ const Comment: React.FC<ICommentItem> = ({ comment, currentUser }) => {
                             currentUser={currentUser}
                             buttonText="Reply"
                             buttonName="reply"
+                            isReplyMode={true}
+                            comment={comment}
+                            replyToUser={comment.user}
+                            handleAddReply={handleAddReply}
                         />
                     }
                 </>

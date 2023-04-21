@@ -14,7 +14,7 @@ export default styled.button<Props>`
     height: fit-content;
     text-transform: uppercase;
     font-weight: bold;
-    font-size: ${props => props.theme.fontSizeParagraph};
+    font-size: ${props => props.theme.typography.fontSizeParagraph};
     min-width: ${props => props.large ? "161px" : "104px"};
     min-height: 48px;
     color: ${props => props.theme.colors.white};
