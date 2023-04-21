@@ -1,8 +1,8 @@
 import AppButton from '../app/AppButton';
+import AppContainer from "../app/AppContainer";
 import AddCommentTextarea from './AddCommentTextarea';
 import AddCommentPicture from './AddCommentPicture';
 import AddCommentContainer from "./AddCommentContainer";
-import AddCommentForm from "./AddCommentForm";
 
 interface IUser {
     id: number
@@ -23,15 +23,17 @@ interface IAddComment {
 
 const AddComment: React.FC<IAddComment> = ({ currentUser, replyToUser, comment, buttonName, buttonText, handleSubmit }) => {
     return (
-        <AddCommentContainer>
-            <AddCommentPicture
-                alt={currentUser.username}
-                srcPrimary={currentUser.image.webp}
-                srcDefault={currentUser.image.png}
-            />
-            <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
-            <AppButton id={currentUser.id} name={buttonName}>{buttonText}</AppButton>
-        </AddCommentContainer>
+        <AppContainer>
+            <AddCommentContainer>
+                <AddCommentPicture
+                    alt={currentUser.username}
+                    srcPrimary={currentUser.image.webp}
+                    srcDefault={currentUser.image.png}
+                />
+                <AddCommentTextarea name='content' placeholder="Add a comment…"></AddCommentTextarea>
+                <AppButton id={currentUser.id} name={buttonName}>{buttonText}</AppButton>
+            </AddCommentContainer>
+        </AppContainer>
     )
 }
 

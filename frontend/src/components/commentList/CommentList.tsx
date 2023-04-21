@@ -31,27 +31,25 @@ interface ICommentList {
 const CommentList: React.FC<ICommentList> = ({ comments, currentUser }) => {
     return (
         <AppContainer>
-            <>
-                {comments.map((comment) => (
-                    !comment.reply &&
-                    <li key={comment.id}>
-                        <Comment
-                            comment={comment}
-                            currentUser={currentUser}
-                        />
-                        <CommentListReply>
-                            {comment.replies.map(reply => (
-                                <li key={reply.id}>
-                                    <Comment
-                                        comment={reply}
-                                        currentUser={currentUser}
-                                    />
-                                </li>
-                            ))}
-                        </CommentListReply>
-                    </li>
-                ))}
-            </>
+            {comments.map((comment) => (
+                !comment.reply &&
+                <li key={comment.id}>
+                    <Comment
+                        comment={comment}
+                        currentUser={currentUser}
+                    />
+                    <CommentListReply>
+                        {comment.replies.map(reply => (
+                            <li key={reply.id}>
+                                <Comment
+                                    comment={reply}
+                                    currentUser={currentUser}
+                                />
+                            </li>
+                        ))}
+                    </CommentListReply>
+                </li>
+            ))}
         </AppContainer>
     )
 }
