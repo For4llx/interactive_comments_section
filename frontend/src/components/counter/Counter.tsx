@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useMutation } from "react-query";
+import { likedComment, dislikedComment } from "./CounterAPI";
 import CounterButton from "./CounterButton";
 import CounterContainer from "./CounterContainer";
 import CounterMinusIcon from "./CounterIconMinus";
@@ -33,41 +34,9 @@ interface ICounter {
 }
 
 const Counter: React.FC<ICounter> = ({ comment, currentUser }) => {
-    const [count, setCount] = useState<number>(comment.score);
-    const [liked, setLiked] = useState<boolean>(comment.user_liked.includes(currentUser));
-    const [disliked, setDisliked] = useState<boolean>(comment.user_disliked.includes(currentUser));
-
-    const likedComment = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.id}/`, {
-            method: "PATCH",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                commentId: comment.id,
-                currnetUserId: currentUser.id,
-                score: comment.score + 1,
-            })
-        }
-        )
-        return response.json()
-    }
-
-    const dislikedComment = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.id}/`, {
-            method: "PATCH",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                score: comment.score - 1
-            })
-        }
-        )
-        return response.json()
-    }
+    const [count, setCount] = useState<number>(0);
+    const [liked, setLiked] = useState<boolean>(false);
+    const [disliked, setDisliked] = useState<boolean>(false);
 
     const mutationLikedComment = useMutation({
         mutationFn: likedComment
@@ -76,30 +45,35 @@ const Counter: React.FC<ICounter> = ({ comment, currentUser }) => {
     const mutationDislikedComment = useMutation({
         mutationFn: dislikedComment
     })
+
     const handleIncrementCount = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void => {
         e.preventDefault()
-        if (disliked) {
+        if (liked === true) {
+            return console.log("t'as déjà lické frero")
+        } else if (disliked === true) {
             setCount(count + 1)
-            setDisliked(!disliked)
-        } else if (!liked) {
+            setDisliked(false)
+        } else if (liked === false && disliked === false) {
             setCount(count + 1)
-            setLiked(!liked)
+            setLiked(true)
         }
-        mutationLikedComment.mutate(e)
     }
 
     const handleDecrementCount = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void => {
         e.preventDefault()
-        if (liked) {
+        if (disliked === true) {
+            return console.log("t'as déjà dislické frero")
+        } else if (liked === true) {
             setCount(count - 1)
-            setLiked(!liked)
-        } else if (!disliked) {
+            setLiked(false)
+        } else if (liked === false && disliked === false) {
             setCount(count - 1)
-            setDisliked(!disliked)
+            setDisliked(true)
         }
-        mutationDislikedComment.mutate(e)
-    }
 
+        // mutationLikedComment.mutate({ e, comment, liked, disliked, currentUser })
+        // mutationDislikedComment.mutate({ e, comment, liked, disliked, currentUser })
+    }
 
     return (
         <CounterContainer>

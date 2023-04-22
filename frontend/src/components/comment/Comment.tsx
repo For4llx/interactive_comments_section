@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { useMutation } from "react-query"
+import { deleteComment, editComment, addReply } from "./CommentAPI"
 import Modal from "../modal"
 import Counter from "../counter"
 import AddComment from "../addComment"
@@ -19,7 +21,6 @@ import CommentDeleteIcon from "./CommentDeleteIcon"
 import CommentReplyIcon from "./CommentReplyIcon"
 import CommentEditForm from "./CommentEditForm"
 import useToggle from "../utils/useToogle"
-import { useMutation } from "react-query"
 
 interface IUser {
     id: number
@@ -56,6 +57,31 @@ const Comment: React.FC<ICommentItem> = ({ comment, comments, setComments, curre
     const [isDeleteMode, setIsDeleteMode] = useToggle(false);
     const [content, setContent] = useState(comment.content)
 
+    const addReplyMutation = useMutation({
+        mutationFn: addReply,
+        onSuccess: (comment_instance) => {
+            if (!comment_instance.reply) {
+                setComments([...comments, comment_instance])
+            } else {
+                const updatedComments = comments.map(comment => {
+                    if (comment.id === comment_instance.parent_id) {
+                        return { ...comment, replies: [...comment.replies, comment_instance] }
+                    }
+                    return comment;
+                });
+                setComments(updatedComments)
+            }
+        }
+    })
+
+    const EditCommentMutation = useMutation({
+        mutationFn: editComment
+    })
+
+    const deleteCommentMutation = useMutation({
+        mutationFn: deleteComment
+    })
+
     const handleEdit = (e: React.FormEvent<HTMLFormElement>): void => {
         e.preventDefault()
         setContent(e.currentTarget.content.value)
@@ -86,90 +112,17 @@ const Comment: React.FC<ICommentItem> = ({ comment, comments, setComments, curre
         setIsReplyMode()
     };
 
-    const addReply = useMutation({
-        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
-            let body = ""
-            if (e.target.send) {
-                body = JSON.stringify({
-                    user: currentUser,
-                    content: e.target.content.value,
-                    reply: false
-                })
-            }
-            if (e.target.reply) {
-                body = JSON.stringify({
-                    user: currentUser,
-                    content: e.target.content.value,
-                    reply: true,
-                    parent_id: e.target.reply.id,
-                })
-            }
-            const response = await fetch('http://127.0.0.1:8000/comments/', {
-                method: 'POST',
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: body
-            })
-            return response.json()
-        },
-        onSuccess: (comment_instance) => {
-            if (!comment_instance.reply) {
-                setComments([...comments, comment_instance])
-            } else {
-                const updatedComments = comments.map(comment => {
-                    if (comment.id === comment_instance.parent_id) {
-                        return { ...comment, replies: [...comment.replies, comment_instance] }
-                    }
-                    return comment;
-                });
-                setComments(updatedComments)
-            }
-        }
-    })
-
     const handleAddReply = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        addReply.mutate(e)
+        addReplyMutation.mutate({ e, currentUser })
         handleReply(e)
     }
 
-    const EditComment = useMutation({
-        mutationFn: (async (e: React.FormEvent<HTMLFormElement>) => {
-            const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.edit.id}/`, {
-                method: 'PATCH',
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "id": e.target.edit.id,
-                    "content": e.target.content.value,
-                })
-            })
-            return response.json()
-        })
-    })
-
     const handleEditComment = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        EditComment.mutate(e)
+        EditCommentMutation.mutate(e)
         handleEdit(e)
     }
-
-    const DeleteComment = useMutation({
-        mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
-            const response = await fetch(`http://127.0.0.1:8000/comments/${e.target.id}/`, {
-                method: 'DELETE',
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-            })
-            return response.json()
-        }
-    })
 
     const handleDeleteComment = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -178,9 +131,8 @@ const Comment: React.FC<ICommentItem> = ({ comment, comments, setComments, curre
         } else {
             handleDeleteParent(e)
         }
-        DeleteComment.mutate(e)
+        deleteCommentMutation.mutate(e)
     }
-
 
     return (
         <>
