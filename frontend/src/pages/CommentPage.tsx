@@ -35,9 +35,6 @@ async function fetchComments() {
     return response.json();
 }
 
-
-
-
 function CommentPage() {
     const [comments, setComments] = useState<IComment[]>([]);
     const [currentUser, setCurrentUser] = useState<IUser>({
@@ -94,8 +91,3 @@ function CommentPage() {
 }
 
 export default CommentPage
-
-
-/*
-
-*/
